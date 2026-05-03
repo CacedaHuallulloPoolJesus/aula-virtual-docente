@@ -1,4 +1,4 @@
-import { Role, StudentStatus } from "@prisma/client";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 
@@ -6,9 +6,6 @@ async function main() {
   const adminPassword = await bcrypt.hash("Admin123*", 10);
   const demoPassword = await bcrypt.hash("123456", 10);
 
-  await prisma.report.deleteMany();
-  await prisma.agentLog.deleteMany();
-  await prisma.generatedSession.deleteMany();
   await prisma.learningSession.deleteMany();
   await prisma.gradeRecord.deleteMany();
   await prisma.attendance.deleteMany();
@@ -148,7 +145,7 @@ async function main() {
       address: "Huayucachi Centro",
       gradeId: grade1.id,
       sectionId: sectionA.id,
-      status: StudentStatus.ACTIVE,
+      status: "ACTIVE",
     },
   });
   const student2 = await prisma.student.create({
@@ -164,7 +161,7 @@ async function main() {
       address: "Anexo Pucará",
       gradeId: grade1.id,
       sectionId: sectionA.id,
-      status: StudentStatus.ACTIVE,
+      status: "ACTIVE",
     },
   });
   const student3 = await prisma.student.create({
@@ -180,7 +177,7 @@ async function main() {
       address: "Huancayo",
       gradeId: grade2.id,
       sectionId: sectionB.id,
-      status: StudentStatus.ACTIVE,
+      status: "ACTIVE",
     },
   });
 
