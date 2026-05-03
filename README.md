@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema Integral de Aula Virtual Docente
 
-## Getting Started
+Aplicación web para la **I.E. Virgen del Carmen (Huayucachi)** y contexto de tesis de Ingeniería de Sistemas: gestión académica de primaria, sesiones de aprendizaje y módulos de apoyo con **inteligencia artificial** (simulación local + puntos de extensión a API externa).
 
-First, run the development server:
+## Tecnologías
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js** (App Router) + **React** + **TypeScript**
+- **Tailwind CSS**
+- **Prisma ORM** — **SQLite** en demo local; mismo esquema orientado a **PostgreSQL** en producción
+- **NextAuth** (credenciales + adaptador Prisma, según configuración)
+- **Recharts**, **lucide-react**, **jsPDF** / **jspdf-autotable**, **Zod**
+
+## Estructura de carpetas (resumen)
+
+```text
+sistema-aula-virtual/
+├── docs/                    # Documentación de arquitectura, BD, demo y manual
+├── prisma/                  # schema, migrations, seed, dev.db (local)
+├── public/                  # insignia, assets estáticos
+├── src/
+│   ├── app/
+│   │   ├── (main)/          # Rutas autenticadas (URL sin "(main)": /dashboard, /notas, …)
+│   │   ├── api/             # API Routes (Prisma, agentes, etc.)
+│   │   ├── login/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── layout/          # AppLayout, Sidebar, Navbar, DemoAuthGuard
+│   │   ├── ui/              # Button, Card, Input, Badge, Modal, Table
+│   │   ├── forms/           # TeacherForm, StudentForm, SessionForm, GradesForm, IaSessionForm
+│   │   ├── dashboard/       # MetricCard, PerformanceChart, AlertsPanel
+│   │   └── agents/          # AgentCard, AgentResultPanel, AgentAlertPreview
+│   ├── constants/           # routes (navegación), roles, academic (áreas, periodos)
+│   ├── hooks/               # useAuth, useStudents, useTeachers
+│   ├── lib/                 # prisma, auth (NextAuth), mock-data, agents, validations, utils
+│   └── types/               # Tipos de dominio (auth, teacher, student, …)
+├── .env / .env.example
+├── package.json
+└── tsconfig.json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Credenciales demo (login local)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Rol | Correo | Contraseña |
+|-----|--------|------------|
+| Admin | `admin@aula.com` | `123456` |
+| Docente 1 | `docente1@aula.com` | `123456` |
+| Docente 2 | `docente2@aula.com` | `123456` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Detalle en [docs/usuarios-demo.md](docs/usuarios-demo.md).
 
-## Learn More
+## Instalación y ejecución
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Abrir [http://localhost:3000](http://localhost:3000), iniciar sesión y navegar por el panel.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Preparar demo (migraciones + seed + servidor)
 
-## Deploy on Vercel
+```bash
+npm run demo
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Equivale a generar cliente Prisma, aplicar migraciones, ejecutar seed y levantar `npm run dev` (ver `package.json`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Comandos Prisma útiles
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+En Windows, si el CLI de Prisma no ve `DATABASE_URL`:
+
+```bash
+npm run setup:demo
+```
+
+## Calidad de código
+
+```bash
+npm run lint
+npm run build
+```
+
+## Módulos implementados
+
+- Dashboard con métricas y gráficos
+- Docentes, estudiantes, asistencia, notas, sesiones
+- IA Sesiones (generación local editable)
+- **Agentes IA** (planificación, rendimiento, alertas, actividades, asistente)
+- Reportes, grados/secciones, configuración (admin)
+- Documentación en `docs/`
+
+## Documentación adicional
+
+- [Arquitectura](docs/arquitectura.md)
+- [Base de datos](docs/base-datos.md)
+- [Manual de usuario](docs/manual-usuario.md)
+
+## Variables de entorno
+
+Ver `.env.example`. Para agentes con API externa opcional: `NEXT_PUBLIC_AI_API_URL`.

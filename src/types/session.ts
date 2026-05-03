@@ -1,0 +1,21 @@
+export type LearningSession = {
+  id: string;
+  teacherId: string;
+  title: string;
+  grade: string;
+  section: string;
+  area: string;
+  competence: string;
+  capacity: string;
+  performance: string;
+  purpose: string;
+  evidence: string;
+  start: string;
+  development: string;
+  closure: string;
+  resources: string;
+  evaluation: string;
+  date: string;
+  duration: string;
+  generatedByIa: boolean;
+};
