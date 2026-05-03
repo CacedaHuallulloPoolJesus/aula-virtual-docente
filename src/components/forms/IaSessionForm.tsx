@@ -1,8 +1,11 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useState } from "react";
+import type { SystemConfig } from "@prisma/client";
 import { Button, Card, Input } from "@/components/ui";
-import { useAppData } from "@/components/providers/AppDataProvider";
+import { apiJson } from "@/lib/api-client";
+import { buildAcademicPdf } from "@/lib/pdf-export";
 
 type GeneratedSession = {
   title: string;
@@ -24,63 +27,120 @@ type GeneratedSession = {
 };
 
 export function IaSessionForm() {
+  const { data: session } = useSession();
   const [result, setResult] = useState<GeneratedSession | null>(null);
   const [loading, setLoading] = useState(false);
-  const { auth, data, addSession } = useAppData();
-  const teacher = data.teachers.find((t) => t.id === auth.user?.teacherId);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!session?.user?.teacherId) {
+      alert("Solo usuarios con perfil docente pueden generar sesiones con IA.");
+      return;
+    }
     setLoading(true);
     const formData = Object.fromEntries(new FormData(e.currentTarget).entries());
-
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    setResult({
-      title: `Sesión IA: ${formData.topic as string}`,
-      grade: formData.grade as string,
-      section: formData.section as string,
-      area: formData.area as string,
-      competence: formData.competence as string,
-      capacity: formData.capacity as string,
-      performance: `Resuelve situaciones del tema ${formData.topic as string} en nivel ${formData.level as string}.`,
-      learningPurpose: formData.purpose as string,
-      evidence: "Producto grupal, ficha resuelta y participación en plenaria.",
-      start: "Activación de saberes previos y planteamiento del reto.",
-      development: `Durante ${formData.duration as string}, los estudiantes desarrollan el tema ${
-        formData.topic as string
-      } con actividades guiadas, trabajo colaborativo y uso de ${formData.resources as string}.`,
-      closure: "Metacognición, compromisos y retroalimentación formativa.",
-      resources: formData.resources as string,
-      evaluation: "Lista de cotejo con criterios de desempeño y participación.",
-      instrument: "Rúbrica analítica",
-      duration: formData.duration as string,
-    });
+    try {
+      const apiRes = await fetch("/api/sessions/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          grade: formData.grade,
+          area: formData.area,
+          topic: formData.topic,
+          competence: formData.competence,
+          duration: formData.duration,
+          purpose: formData.purpose,
+        }),
+      });
+      if (!apiRes.ok) {
+        alert(await apiRes.text());
+        setLoading(false);
+        return;
+      }
+      const gen = (await apiRes.json()) as Record<string, string>;
+      setResult({
+        title: String(gen.title ?? `Sesión IA: ${formData.topic as string}`),
+        grade: String(formData.grade ?? ""),
+        section: String(formData.section ?? ""),
+        area: String(formData.area ?? ""),
+        competence: String(gen.competence ?? formData.competence ?? ""),
+        capacity: String(gen.capacity ?? ""),
+        performance: String(gen.performance ?? ""),
+        learningPurpose: String(gen.learningPurpose ?? formData.purpose ?? ""),
+        evidence: String(gen.learningEvidence ?? ""),
+        start: String(gen.startActivity ?? ""),
+        development: String(gen.development ?? ""),
+        closure: String(gen.closure ?? ""),
+        resources: String(gen.resources ?? ""),
+        evaluation: String(gen.evaluation ?? ""),
+        instrument: "Lista de cotejo / rúbrica",
+        duration: String(formData.duration ?? "90 minutos"),
+      });
+    } catch {
+      alert("Error al generar sesión");
+    }
     setLoading(false);
   }
 
-  function saveSession() {
-    if (!result || !auth.user?.teacherId) return;
-    addSession({
-      teacherId: auth.user.teacherId,
-      title: result.title,
-      grade: result.grade,
-      section: result.section,
-      area: result.area,
-      competence: result.competence,
-      capacity: result.capacity,
-      performance: result.performance,
-      purpose: result.learningPurpose,
-      evidence: result.evidence,
-      start: result.start,
-      development: result.development,
-      closure: result.closure,
-      resources: result.resources,
-      evaluation: result.evaluation,
-      date: new Date().toISOString().slice(0, 10),
-      duration: result.duration,
-      generatedByIa: true,
-    });
-    alert("Sesión IA guardada correctamente.");
+  async function saveSession() {
+    if (!result || !session?.user?.teacherId) return;
+    try {
+      await apiJson("/api/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          title: result.title,
+          grade: result.grade,
+          section: result.section,
+          area: result.area,
+          competence: result.competence,
+          capacity: result.capacity,
+          performance: result.performance,
+          learningPurpose: result.learningPurpose,
+          learningEvidence: result.evidence,
+          startActivity: result.start,
+          development: result.development,
+          closure: result.closure,
+          resources: result.resources,
+          evaluation: result.evaluation,
+          date: new Date().toISOString().slice(0, 10),
+          duration: result.duration,
+          generatedByIa: true,
+        }),
+      });
+      alert("Sesión IA guardada correctamente.");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Error al guardar");
+    }
+  }
+
+  async function exportPdf() {
+    if (!result || !session?.user?.teacherId) return;
+    try {
+      const config = await apiJson<SystemConfig | null>("/api/system-config");
+      const doc = buildAcademicPdf({
+        config,
+        title: result.title,
+        subtitle: `${result.area} · ${result.grade} ${result.section}`,
+        teacherName: session.user.name ?? session.user.email ?? "",
+        gradeSection: `${result.grade} — ${result.section}`,
+        columns: [
+          { header: "Sección", dataKey: "k" },
+          { header: "Contenido", dataKey: "v" },
+        ],
+        rows: [
+          { k: "Propósito", v: result.learningPurpose },
+          { k: "Competencia", v: result.competence },
+          { k: "Inicio", v: result.start },
+          { k: "Desarrollo", v: result.development },
+          { k: "Cierre", v: result.closure },
+          { k: "Evaluación", v: result.evaluation },
+        ],
+      });
+      doc.save("sesion-ia.pdf");
+    } catch {
+      alert("No se pudo exportar PDF");
+    }
   }
 
   function updateField<K extends keyof GeneratedSession>(key: K, value: GeneratedSession[K]) {
@@ -91,18 +151,15 @@ export function IaSessionForm() {
     <div className="grid gap-4 lg:grid-cols-2">
       <Card className="border-purple-100">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Generador inteligente de sesiones</h2>
-        <form className="space-y-3" onSubmit={handleSubmit}>
-          <Input label="Grado" name="grade" placeholder="3ro primaria" defaultValue={teacher?.grade} required />
-          <Input label="Sección" name="section" placeholder="A" defaultValue={teacher?.section} required />
+        <form className="space-y-3" onSubmit={(e) => void handleSubmit(e)}>
+          <Input label="Grado" name="grade" placeholder="3ro primaria" defaultValue={session?.user?.assignedGradeName ?? ""} required />
+          <Input label="Sección" name="section" placeholder="A" defaultValue={session?.user?.assignedSectionName ?? ""} required />
           <Input label="Área curricular" name="area" placeholder="Comunicación" required />
           <Input label="Tema" name="topic" placeholder="Comprensión lectora inferencial" required />
           <Input label="Competencia" name="competence" placeholder="Lee diversos tipos de textos" required />
-          <Input label="Capacidad" name="capacity" placeholder="Infiere e interpreta información" required />
-          <Input label="Duración" name="duration" placeholder="90 minutos" required />
+          <Input label="Duración" name="duration" placeholder="90 minutos" defaultValue="90 minutos" required />
           <Input label="Propósito de aprendizaje" name="purpose" placeholder="Inferir información implícita" required />
-          <Input label="Nivel de dificultad" name="level" placeholder="Intermedio" required />
-          <Input label="Recursos disponibles" name="resources" placeholder="Pizarra, papelógrafos, fichas" required />
-          <Button type="submit" variant="purple" className="w-full">
+          <Button type="submit" variant="purple" className="w-full" disabled={loading}>
             {loading ? "Generando..." : "Generar sesión inteligente"}
           </Button>
         </form>
@@ -124,13 +181,10 @@ export function IaSessionForm() {
             <Input label="Evaluación" value={result.evaluation} onChange={(e) => updateField("evaluation", e.target.value)} />
             <Input label="Instrumento" value={result.instrument} onChange={(e) => updateField("instrument", e.target.value)} />
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="purple" onClick={saveSession}>
+              <Button variant="purple" onClick={() => void saveSession()}>
                 Guardar sesión
               </Button>
-              <Button variant="secondary" onClick={() => alert("Puedes editar los campos directamente arriba.")}>
-                Editar resultado
-              </Button>
-              <Button variant="secondary" onClick={() => alert("Exportación a PDF preparada.")}>
+              <Button variant="secondary" onClick={() => void exportPdf()}>
                 Exportar PDF
               </Button>
               <Button variant="secondary" onClick={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))}>

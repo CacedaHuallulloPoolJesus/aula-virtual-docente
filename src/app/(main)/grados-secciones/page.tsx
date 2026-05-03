@@ -1,24 +1,61 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui";
-import { useAppData } from "@/components/providers/AppDataProvider";
+import { apiJson } from "@/lib/api-client";
+
+type TeacherRow = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  assignedGrade: { name: string } | null;
+  assignedSection: { name: string } | null;
+};
+
+type StudentRow = { id: string; grade: { name: string }; section: { name: string } };
 
 export default function GradosSeccionesPage() {
-  const { data } = useAppData();
-  const groups = Array.from(
-    data.teachers.reduce((map, teacher) => {
-      const key = `${teacher.grade} - ${teacher.section}`;
-      map.set(key, (map.get(key) ?? 0) + 1);
-      return map;
-    }, new Map<string, number>()),
-  );
+  const [teachers, setTeachers] = useState<TeacherRow[]>([]);
+  const [students, setStudents] = useState<StudentRow[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [t, s] = await Promise.all([apiJson<TeacherRow[]>("/api/admin/teachers"), apiJson<StudentRow[]>("/api/students")]);
+        setTeachers(t);
+        setStudents(s);
+      } catch {
+        setTeachers([]);
+        setStudents([]);
+      }
+    })();
+  }, []);
+
+  const groups = useMemo(() => {
+    const map = new Map<string, { teachers: number; students: number }>();
+    for (const teacher of teachers) {
+      const g = teacher.assignedGrade?.name ?? "—";
+      const sec = teacher.assignedSection?.name ?? "—";
+      const key = `${g} — ${sec}`;
+      const cur = map.get(key) ?? { teachers: 0, students: 0 };
+      cur.teachers += 1;
+      map.set(key, cur);
+    }
+    for (const st of students) {
+      const key = `${st.grade.name} — ${st.section.name}`;
+      const cur = map.get(key) ?? { teachers: 0, students: 0 };
+      cur.students += 1;
+      map.set(key, cur);
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [teachers, students]);
 
   return (
     <section className="space-y-4">
       <h2 className="text-2xl font-bold text-slate-900">Grados y secciones</h2>
       <Card className="overflow-auto">
         <table className="min-w-full text-left text-sm text-slate-700">
-          <thead className="border-b border-slate-200 bg-slate-50 text-slate-800 font-semibold">
+          <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-800">
             <tr>
               <th className="px-3 py-2">Grado y sección</th>
               <th className="px-3 py-2">Docentes asignados</th>
@@ -26,11 +63,11 @@ export default function GradosSeccionesPage() {
             </tr>
           </thead>
           <tbody>
-            {groups.map(([group, teachers]) => (
+            {groups.map(([group, counts]) => (
               <tr key={group} className="border-b border-slate-200 hover:bg-slate-50">
                 <td className="px-3 py-2 text-slate-900">{group}</td>
-                <td className="px-3 py-2">{teachers}</td>
-                <td className="px-3 py-2">{data.students.filter((student) => `${student.grade} - ${student.section}` === group).length}</td>
+                <td className="px-3 py-2">{counts.teachers}</td>
+                <td className="px-3 py-2">{counts.students}</td>
               </tr>
             ))}
           </tbody>

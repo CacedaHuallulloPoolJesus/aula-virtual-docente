@@ -1,21 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect } from "react";
-import { useAppData } from "@/components/providers/AppDataProvider";
 
 export function DemoAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { auth } = useAppData();
+  const { status } = useSession();
 
   useEffect(() => {
-    if (!auth.user) {
+    if (status === "unauthenticated") {
       router.replace("/login");
     }
-  }, [router, auth.user]);
+  }, [router, status]);
 
-  if (!auth.user) {
+  if (status === "loading") {
     return <div className="p-6 text-sm text-slate-600">Validando sesión...</div>;
+  }
+
+  if (status === "unauthenticated") {
+    return <div className="p-6 text-sm text-slate-600">Redirigiendo al inicio de sesión...</div>;
   }
 
   return <>{children}</>;

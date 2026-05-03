@@ -1,15 +1,49 @@
 "use client";
 
-import { useMemo } from "react";
-import { useAppData } from "@/components/providers/AppDataProvider";
+import { useEffect, useState } from "react";
+import { apiJson } from "@/lib/api-client";
 import type { Student } from "@/types/student";
 
-/** Estudiantes visibles según rol (admin: todos; docente: su grado/sección). */
+type ApiStudent = {
+  id: string;
+  code: string;
+  firstName: string;
+  lastName: string;
+  dni: string | null;
+  birthDate: string | null;
+  guardian: string | null;
+  guardianPhone: string | null;
+  address: string | null;
+  status: Student["status"];
+  grade: { name: string };
+  section: { name: string };
+};
+
 export function useStudents(): Student[] {
-  const { data, auth } = useAppData();
-  const teacher = data.teachers.find((t) => t.id === auth.user?.teacherId);
-  return useMemo(() => {
-    if (auth.user?.role === "ADMIN") return data.students;
-    return data.students.filter((s) => s.grade === teacher?.grade && s.section === teacher?.section);
-  }, [data.students, auth.user?.role, teacher?.grade, teacher?.section]);
+  const [list, setList] = useState<Student[]>([]);
+
+  useEffect(() => {
+    apiJson<ApiStudent[]>("/api/students")
+      .then((rows) =>
+        setList(
+          rows.map((s) => ({
+            id: s.id,
+            code: s.code,
+            firstName: s.firstName,
+            lastName: s.lastName,
+            dni: s.dni ?? "",
+            birthDate: s.birthDate ? s.birthDate.slice(0, 10) : "",
+            grade: s.grade.name,
+            section: s.section.name,
+            guardian: s.guardian ?? "",
+            guardianPhone: s.guardianPhone ?? "",
+            address: s.address ?? "",
+            status: s.status,
+          })),
+        ),
+      )
+      .catch(() => setList([]));
+  }, []);
+
+  return list;
 }

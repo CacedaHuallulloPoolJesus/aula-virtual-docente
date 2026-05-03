@@ -1,4 +1,6 @@
-export type TeacherStatus = "ACTIVO" | "INACTIVO";
+import type { TeacherStatus as PrismaTeacherStatus } from "@prisma/client";
+
+export type TeacherStatus = PrismaTeacherStatus;
 
 export type Teacher = {
   id: string;

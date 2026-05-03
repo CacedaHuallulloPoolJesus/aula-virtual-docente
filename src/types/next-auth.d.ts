@@ -7,6 +7,10 @@ declare module "next-auth" {
       id: string;
       role: Role;
       teacherId?: string;
+      assignedGradeId?: string;
+      assignedSectionId?: string;
+      assignedGradeName?: string;
+      assignedSectionName?: string;
     } & DefaultSession["user"];
   }
 }
@@ -16,5 +20,9 @@ declare module "next-auth/jwt" {
     id: string;
     role: Role;
     teacherId?: string;
+    assignedGradeId?: string;
+    assignedSectionId?: string;
+    assignedGradeName?: string;
+    assignedSectionName?: string;
   }
 }

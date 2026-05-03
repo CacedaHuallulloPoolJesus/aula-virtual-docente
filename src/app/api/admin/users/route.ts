@@ -13,16 +13,25 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const hashed = await bcrypt.hash(body.password, 10);
+  const hashed = await bcrypt.hash(String(body.password ?? "123456"), 10);
+  const fullName = String(body.fullName ?? body.email ?? "Docente").trim();
+  const parts = fullName.split(/\s+/);
+  const firstName = String(body.firstName ?? parts[0] ?? "Docente").trim();
+  const lastName = String(body.lastName ?? (parts.slice(1).join(" ") || "Nuevo")).trim();
   const user = await prisma.user.create({
     data: {
-      email: body.email,
+      email: String(body.email).toLowerCase().trim(),
       password: hashed,
       role: body.role as Role,
       teacher:
         body.role === Role.TEACHER
           ? {
-              create: { fullName: body.fullName ?? body.email },
+              create: {
+                firstName,
+                lastName,
+                fullName: `${firstName} ${lastName}`.trim() || fullName,
+                dni: body.dni ? String(body.dni) : null,
+              },
             }
           : undefined,
     },

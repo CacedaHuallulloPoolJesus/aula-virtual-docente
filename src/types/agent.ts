@@ -1,6 +1,14 @@
-import type { AppData } from "./app";
+import type { AttendanceRecord } from "./attendance";
+import type { GradeRecord } from "./grades";
+import type { LearningSession } from "./session";
+import type { Student } from "./student";
 
-export type AgentsDataContext = Pick<AppData, "students" | "grades" | "attendance" | "sessions">;
+export type AgentsDataContext = {
+  students: Student[];
+  grades: GradeRecord[];
+  attendance: AttendanceRecord[];
+  sessions: LearningSession[];
+};
 
 export type SessionGeneratorInput = {
   grade: string;

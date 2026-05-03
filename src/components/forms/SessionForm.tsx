@@ -33,7 +33,7 @@ type Props = {
 };
 
 export function SessionForm({ form, setForm, role, teacherGrade, teacherSection, onSubmit, onClear }: Props) {
-  const isTeacher = role === "DOCENTE";
+  const isTeacher = role === "TEACHER";
   return (
     <form className="grid gap-3 md:grid-cols-2" onSubmit={onSubmit}>
       <Input label="Título" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} required />

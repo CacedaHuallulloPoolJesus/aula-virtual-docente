@@ -1,1 +1,1 @@
-export { AppDataProvider, useAppData } from "./AppDataProvider";
+export { Providers } from "../providers";

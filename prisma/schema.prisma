@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,9 +12,16 @@ enum Role {
   TEACHER
 }
 
+enum TeacherStatus {
+  ACTIVE
+  INACTIVE
+}
+
 enum StudentStatus {
   ACTIVE
   INACTIVE
+  TRANSFERRED
+  WITHDRAWN
 }
 
 enum AttendanceStatus {
@@ -37,24 +39,33 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  teacher Teacher?
+  teacher  Teacher?
   accounts Account[]
   sessions Session[]
+  reports  Report[]
 }
 
 model Teacher {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  fullName  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String        @id @default(cuid())
+  userId             String        @unique
+  firstName          String
+  lastName           String
+  fullName           String
+  dni                String?
+  status             TeacherStatus @default(ACTIVE)
+  assignedGradeId   String?
+  assignedSectionId String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courses          Course[]
-  gradeRecords     GradeRecord[]
-  attendances      Attendance[]
-  learningSessions LearningSession[]
-  generatedSession GeneratedSession[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedGrade     Grade?             @relation("TeacherAssignedGrade", fields: [assignedGradeId], references: [id])
+  assignedSection   Section?           @relation("TeacherAssignedSection", fields: [assignedSectionId], references: [id])
+  courses           Course[]
+  gradeRecords      GradeRecord[]
+  attendances       Attendance[]
+  learningSessions  LearningSession[]
+  generatedSessions GeneratedSession[]
 }
 
 model Grade {
@@ -63,9 +74,10 @@ model Grade {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sections Section[]
-  students Student[]
-  courses  Course[]
+  sections         Section[]
+  students         Student[]
+  courses          Course[]
+  teachersAssigned Teacher[] @relation("TeacherAssignedGrade")
 }
 
 model Section {
@@ -75,23 +87,24 @@ model Section {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  grade    Grade    @relation(fields: [gradeId], references: [id], onDelete: Cascade)
-  students Student[]
-  courses  Course[]
-  attendance Attendance[]
+  grade            Grade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  students         Student[]
+  courses          Course[]
+  attendance       Attendance[]
+  teachersAssigned Teacher[]   @relation("TeacherAssignedSection")
 
   @@unique([gradeId, name])
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  name        String
-  gradeId     String
-  sectionId   String
-  teacherId   String
-  periodId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  gradeId   String
+  sectionId String
+  teacherId String
+  periodId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   grade      Grade          @relation(fields: [gradeId], references: [id], onDelete: Cascade)
   section    Section        @relation(fields: [sectionId], references: [id], onDelete: Cascade)
@@ -115,29 +128,38 @@ model AcademicPeriod {
 }
 
 model Student {
-  id            String        @id @default(cuid())
-  fullName      String
-  code          String        @unique
-  gradeId       String
-  sectionId     String
-  status        StudentStatus @default(ACTIVE)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  attendance    Attendance[]
-  gradeRecords  GradeRecord[]
+  id              String        @id @default(cuid())
+  code            String        @unique
+  firstName       String
+  lastName        String
+  fullName        String
+  dni             String?
+  birthDate       DateTime?
+  guardian        String?
+  guardianPhone   String?
+  address         String?
+  gradeId         String
+  sectionId       String
+  status          StudentStatus @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  grade   Grade   @relation(fields: [gradeId], references: [id], onDelete: Restrict)
-  section Section @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  grade        Grade         @relation(fields: [gradeId], references: [id], onDelete: Restrict)
+  section      Section       @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  attendance   Attendance[]
+  gradeRecords GradeRecord[]
 }
 
 model Attendance {
-  id         String           @id @default(cuid())
-  date       DateTime
-  status     AttendanceStatus
-  studentId  String
-  sectionId  String
-  teacherId  String
-  createdAt  DateTime         @default(now())
+  id            String           @id @default(cuid())
+  date          DateTime
+  status        AttendanceStatus
+  justification String?
+  studentId     String
+  sectionId     String
+  teacherId     String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
@@ -147,56 +169,93 @@ model Attendance {
 }
 
 model GradeRecord {
-  id         String   @id @default(cuid())
-  score      Float
-  studentId  String
-  courseId   String
-  area       String
-  teacherId  String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  note1     Float
+  note2     Float
+  note3     Float
+  studentId String
+  courseId  String
+  area      String
+  teacherId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
 }
 
 model LearningSession {
-  id                String   @id @default(cuid())
-  title             String
-  grade             String
-  area              String
-  competence        String
-  capacity          String
-  performance       String
-  learningPurpose   String
-  learningEvidence  String
-  startActivity     String
-  development       String
-  closure           String
-  resources         String
-  evaluation        String
-  date              DateTime
-  teacherId         String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  title            String
+  grade            String
+  section          String   @default("")
+  area             String
+  competence       String
+  capacity         String
+  performance      String
+  learningPurpose  String
+  learningEvidence String
+  startActivity      String
+  development      String
+  closure          String
+  resources        String
+  evaluation       String
+  date             DateTime
+  duration         String   @default("90 minutos")
+  generatedByIa    Boolean  @default(false)
+  teacherId        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 }
 
 model GeneratedSession {
-  id          String   @id @default(cuid())
-  grade       String
-  area        String
-  topic       String
-  competence  String
-  duration    String
-  purpose     String
-  content     Json
-  teacherId   String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  grade      String
+  area       String
+  topic      String
+  competence String
+  duration   String
+  purpose    String
+  content    Json
+  teacherId  String
+  createdAt  DateTime @default(now())
 
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+}
+
+model SystemConfig {
+  id               String   @id @default("default")
+  institutionName  String   @default("I.E. Virgen del Carmen")
+  modularCode      String?
+  address          String?
+  district         String?
+  province         String?
+  region           String?
+  academicYear     String?
+  directorName     String?
+  logoUrl          String?
+  primaryColor     String?  @default("#0B1F3A")
+  secondaryColor   String?  @default("#0F4C81")
+  accentColor      String?  @default("#F2B705")
+  periodsJson      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reportType  String
+  title       String
+  meta        Json?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [createdById], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -233,7 +292,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/// Registro opcional de invocaciones a agentes (demo / futura integración API).
 model AgentLog {
   id        String   @id @default(cuid())
   agentName String

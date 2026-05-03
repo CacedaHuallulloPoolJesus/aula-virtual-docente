@@ -1,14 +1,20 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Role } from "@prisma/client";
 import { AlertTriangle, BarChart3, Bot, Lightbulb, Loader2, MessageCircle, Sparkles, X } from "lucide-react";
 import { AgentAlertPreview } from "@/components/agents/AgentAlertPreview";
 import { AgentCard } from "@/components/agents/AgentCard";
 import { AgentResultPanel } from "@/components/agents/AgentResultPanel";
 import { Button, Input } from "@/components/ui";
-import { useAppData } from "@/components/providers/AppDataProvider";
 import { areas } from "@/constants/academic";
+import { apiJson } from "@/lib/api-client";
 import type { AgentsDataContext } from "@/lib/agents";
+import type { AttendanceRecord } from "@/types/attendance";
+import type { GradeRecord } from "@/types/grades";
+import type { LearningSession } from "@/types/session";
+import type { Student } from "@/types/student";
 import {
   analyzeAcademicPerformance,
   generateLearningSession,
@@ -45,28 +51,162 @@ async function logAgentRun(agentName: string, input: unknown, output: string, us
   }
 }
 
+type ApiStudent = {
+  id: string;
+  code: string;
+  firstName: string;
+  lastName: string;
+  dni: string | null;
+  birthDate: string | null;
+  guardian: string | null;
+  guardianPhone: string | null;
+  address: string | null;
+  status: Student["status"];
+  grade: { name: string };
+  section: { name: string };
+};
+
+type ApiGrade = {
+  id: string;
+  studentId: string;
+  area: string;
+  note1: number;
+  note2: number;
+  note3: number;
+  course: { period: { name: string } };
+};
+
+type ApiAttendance = {
+  id: string;
+  date: string;
+  studentId: string;
+  status: string;
+  justification: string | null;
+  teacherId: string;
+};
+
+type ApiSession = {
+  id: string;
+  teacherId: string;
+  title: string;
+  grade: string;
+  section: string;
+  area: string;
+  competence: string;
+  capacity: string;
+  performance: string;
+  learningPurpose: string;
+  learningEvidence: string;
+  startActivity: string;
+  development: string;
+  closure: string;
+  resources: string;
+  evaluation: string;
+  date: string;
+  duration: string;
+  generatedByIa: boolean;
+};
+
 export default function AgentesIaPage() {
-  const { data, auth } = useAppData();
-  const teacher = data.teachers.find((t) => t.id === auth.user?.teacherId);
+  const { data: session } = useSession();
+  const [rawStudents, setRawStudents] = useState<ApiStudent[]>([]);
+  const [rawGrades, setRawGrades] = useState<ApiGrade[]>([]);
+  const [rawAttendance, setRawAttendance] = useState<ApiAttendance[]>([]);
+  const [rawSessions, setRawSessions] = useState<ApiSession[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [stu, gr, att, ses] = await Promise.all([
+          apiJson<ApiStudent[]>("/api/students"),
+          apiJson<ApiGrade[]>("/api/grades"),
+          apiJson<ApiAttendance[]>("/api/attendance"),
+          apiJson<ApiSession[]>("/api/sessions"),
+        ]);
+        setRawStudents(stu);
+        setRawGrades(gr);
+        setRawAttendance(att);
+        setRawSessions(ses);
+      } catch {
+        setRawStudents([]);
+        setRawGrades([]);
+        setRawAttendance([]);
+        setRawSessions([]);
+      }
+    })();
+  }, []);
 
   const agentCtx: AgentsDataContext = useMemo(() => {
-    if (auth.user?.role === "ADMIN") {
-      return {
-        students: data.students,
-        grades: data.grades,
-        attendance: data.attendance,
-        sessions: data.sessions,
-      };
+    const students: Student[] = rawStudents.map((s) => ({
+      id: s.id,
+      code: s.code,
+      firstName: s.firstName,
+      lastName: s.lastName,
+      dni: s.dni ?? "",
+      birthDate: s.birthDate ? s.birthDate.slice(0, 10) : "",
+      grade: s.grade.name,
+      section: s.section.name,
+      guardian: s.guardian ?? "",
+      guardianPhone: s.guardianPhone ?? "",
+      address: s.address ?? "",
+      status: s.status,
+    }));
+
+    const grades: GradeRecord[] = rawGrades.map((g) => ({
+      id: g.id,
+      studentId: g.studentId,
+      area: g.area,
+      period: g.course.period.name,
+      note1: g.note1,
+      note2: g.note2,
+      note3: g.note3,
+    }));
+
+    const attendance: AttendanceRecord[] = rawAttendance.map((a) => ({
+      id: a.id,
+      date: new Date(a.date).toISOString().slice(0, 10),
+      studentId: a.studentId,
+      status: a.status,
+      justification: a.justification ?? undefined,
+      teacherId: a.teacherId,
+    }));
+
+    const sessions: LearningSession[] = rawSessions.map((s) => ({
+      id: s.id,
+      teacherId: s.teacherId,
+      title: s.title,
+      grade: s.grade,
+      section: s.section,
+      area: s.area,
+      competence: s.competence,
+      capacity: s.capacity,
+      performance: s.performance,
+      purpose: s.learningPurpose,
+      evidence: s.learningEvidence,
+      start: s.startActivity,
+      development: s.development,
+      closure: s.closure,
+      resources: s.resources,
+      evaluation: s.evaluation,
+      date: s.date.slice(0, 10),
+      duration: s.duration,
+      generatedByIa: s.generatedByIa,
+    }));
+
+    if (session?.user?.role === Role.ADMIN) {
+      return { students, grades, attendance, sessions };
     }
-    const students = data.students.filter((s) => s.grade === teacher?.grade && s.section === teacher?.section);
-    const ids = new Set(students.map((s) => s.id));
+    const scoped = students.filter(
+      (s) => s.grade === session?.user?.assignedGradeName && s.section === session?.user?.assignedSectionName,
+    );
+    const ids = new Set(scoped.map((s) => s.id));
     return {
-      students,
-      grades: data.grades.filter((g) => ids.has(g.studentId)),
-      attendance: data.attendance.filter((a) => a.teacherId === auth.user?.teacherId),
-      sessions: data.sessions.filter((s) => s.teacherId === auth.user?.teacherId),
+      students: scoped,
+      grades: grades.filter((g) => ids.has(g.studentId)),
+      attendance: attendance.filter((a) => a.teacherId === session?.user?.teacherId),
+      sessions: sessions.filter((s) => s.teacherId === session?.user?.teacherId),
     };
-  }, [data, auth.user?.role, auth.user?.teacherId, teacher?.grade, teacher?.section]);
+  }, [rawStudents, rawGrades, rawAttendance, rawSessions, session?.user]);
 
   const [open, setOpen] = useState<AgentId | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,7 +215,7 @@ export default function AgentesIaPage() {
 
   /* Formularios */
   const [sessionForm, setSessionForm] = useState({
-    grade: teacher?.grade ?? "3ro Primaria",
+    grade: "3ro Primaria",
     area: areas[1],
     topic: "",
     competence: "",
@@ -84,6 +224,11 @@ export default function AgentesIaPage() {
     duration: "90 minutos",
     purpose: "",
   });
+
+  useEffect(() => {
+    const g = session?.user?.assignedGradeName;
+    if (g) setSessionForm((p) => ({ ...p, grade: g }));
+  }, [session?.user?.assignedGradeName]);
   const [activityForm, setActivityForm] = useState({
     area: areas[0],
     nivelLogro: "B" as "AD" | "A" | "B" | "C",
@@ -156,7 +301,7 @@ export default function AgentesIaPage() {
       `## Instrumento de evaluación\n${out.instrumentoEvaluacion}`,
     ].join("\n\n");
     setResultText(text);
-    void logAgentRun("Generador de Sesiones", input, text, auth.user?.email ?? null);
+    void logAgentRun("Generador de Sesiones", input, text, session?.user?.email ?? null);
     setLoading(false);
   }
 
@@ -166,7 +311,7 @@ export default function AgentesIaPage() {
     const out = await analyzeAcademicPerformance(agentCtx);
     const text = JSON.stringify(out, null, 2);
     setResultText(text);
-    void logAgentRun("Analizador de Rendimiento", { scope: auth.user?.role }, text, auth.user?.email ?? null);
+    void logAgentRun("Analizador de Rendimiento", { scope: session?.user?.role }, text, session?.user?.email ?? null);
     setLoading(false);
   }
 
@@ -176,7 +321,7 @@ export default function AgentesIaPage() {
     const out = await generatePedagogicalAlerts(agentCtx);
     const text = JSON.stringify(out, null, 2);
     setResultText(text);
-    void logAgentRun("Alertas Pedagógicas", { scope: auth.user?.role }, text, auth.user?.email ?? null);
+    void logAgentRun("Alertas Pedagógicas", { scope: session?.user?.role }, text, session?.user?.email ?? null);
     setLoading(false);
   }
 
@@ -187,7 +332,7 @@ export default function AgentesIaPage() {
     const out = await recommendActivities(input);
     const text = JSON.stringify(out, null, 2);
     setResultText(text);
-    void logAgentRun("Recomendador de Actividades", input, text, auth.user?.email ?? null);
+    void logAgentRun("Recomendador de Actividades", input, text, session?.user?.email ?? null);
     setLoading(false);
   }
 
@@ -202,7 +347,7 @@ export default function AgentesIaPage() {
     }
     const out = await teacherAssistantResponse(q, agentCtx);
     setResultText(out);
-    void logAgentRun("Asistente Docente", { question: q }, out, auth.user?.email ?? null);
+    void logAgentRun("Asistente Docente", { question: q }, out, session?.user?.email ?? null);
     setLoading(false);
   }
 
@@ -310,7 +455,7 @@ export default function AgentesIaPage() {
                 {open === "performance" && (
                   <>
                     <p className="text-sm text-slate-600">
-                      Se usarán las notas y estudiantes visibles para su rol ({auth.user?.role === "ADMIN" ? "toda la institución" : "su aula"}).
+                      Se usarán las notas y estudiantes visibles para su rol ({session?.user?.role === Role.ADMIN ? "toda la institución" : "su aula"}).
                     </p>
                     <Button variant="primary" disabled={loading} onClick={runPerformance}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Analizar rendimiento"}

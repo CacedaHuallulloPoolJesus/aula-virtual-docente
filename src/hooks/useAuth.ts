@@ -1,15 +1,17 @@
 "use client";
 
-import { useAppData } from "@/components/providers/AppDataProvider";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { Role } from "@prisma/client";
 
 export function useAuth() {
-  const { auth, login, logout } = useAppData();
+  const { data, status } = useSession();
   return {
-    user: auth.user,
-    login,
-    logout,
-    isAuthenticated: Boolean(auth.user),
-    isAdmin: auth.user?.role === "ADMIN",
-    isTeacher: auth.user?.role === "DOCENTE",
+    session: data,
+    status,
+    user: data?.user ?? null,
+    isTeacher: data?.user?.role === Role.TEACHER,
+    isAdmin: data?.user?.role === Role.ADMIN,
+    signIn,
+    signOut,
   };
 }

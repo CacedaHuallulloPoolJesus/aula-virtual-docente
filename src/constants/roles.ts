@@ -1,7 +1,7 @@
-/** Roles de la demo local (mock) y equivalente conceptual en UI */
-export const DEMO_ROLES = {
+/** Alineado con Prisma `Role` */
+export const APP_ROLES = {
   ADMIN: "ADMIN",
-  DOCENTE: "DOCENTE",
+  TEACHER: "TEACHER",
 } as const;
 
-export type DemoRole = (typeof DEMO_ROLES)[keyof typeof DEMO_ROLES];
+export type AppRole = (typeof APP_ROLES)[keyof typeof APP_ROLES];

@@ -1,29 +1,36 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
-import { areas, periods } from "@/constants/academic";
-import type { Student } from "@/types/student";
-
-export type GradeRow = {
-  student: Student;
-  values: { note1: number; note2: number; note3: number };
-  promedio: number;
-  nivel: string;
-  riesgo: boolean;
-};
+import { areas } from "@/constants/academic";
+import type { GradeRow } from "@/types/grades";
 
 type Props = {
   area: string;
   setArea: (v: string) => void;
-  period: string;
-  setPeriod: (v: string) => void;
+  periodId: string;
+  setPeriodId: (v: string) => void;
+  periodOptions: { id: string; name: string }[];
   rows: GradeRow[];
   onChangeNote: (studentId: string, key: "note1" | "note2" | "note3", value: number) => void;
   onSave: () => void;
   onClearDraft: () => void;
+  onExportPdf?: () => void;
+  onExportExcel?: () => void;
 };
 
-export function GradesForm({ area, setArea, period, setPeriod, rows, onChangeNote, onSave, onClearDraft }: Props) {
+export function GradesForm({
+  area,
+  setArea,
+  periodId,
+  setPeriodId,
+  periodOptions,
+  rows,
+  onChangeNote,
+  onSave,
+  onClearDraft,
+  onExportPdf,
+  onExportExcel,
+}: Props) {
   return (
     <>
       <Card className="grid gap-3 border-amber-100 md:grid-cols-2">
@@ -38,11 +45,11 @@ export function GradesForm({ area, setArea, period, setPeriod, rows, onChangeNot
           </select>
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-600">Periodo</span>
-          <select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900">
-            {periods.map((item) => (
-              <option key={item}>
-                {item}
+          <span className="mb-1 block font-medium text-slate-600">Periodo / bimestre</span>
+          <select value={periodId} onChange={(e) => setPeriodId(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900">
+            {periodOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
               </option>
             ))}
           </select>
@@ -114,15 +121,19 @@ export function GradesForm({ area, setArea, period, setPeriod, rows, onChangeNot
           <Button variant="warning" onClick={onSave}>
             Guardar notas
           </Button>
-          <Button variant="secondary" onClick={() => alert("Promedios calculados automáticamente.")}>
-            Calcular promedios
-          </Button>
-          <Button variant="secondary" onClick={() => alert("Exportación preparada para PDF/Excel.")}>
-            Exportar reporte
-          </Button>
           <Button variant="secondary" onClick={onClearDraft}>
-            Limpiar
+            Limpiar borrador
           </Button>
+          {onExportPdf ? (
+            <Button variant="secondary" onClick={onExportPdf}>
+              Exportar PDF
+            </Button>
+          ) : null}
+          {onExportExcel ? (
+            <Button variant="secondary" onClick={onExportExcel}>
+              Exportar Excel
+            </Button>
+          ) : null}
         </div>
       </Card>
     </>

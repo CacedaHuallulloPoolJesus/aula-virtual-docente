@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button, Card, Input } from "@/components/ui";
-import { useAppData } from "@/components/providers/AppDataProvider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,9 +14,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [logoSrc, setLogoSrc] = useState("/insignia.png");
-  const { login } = useAppData();
   const router = useRouter();
+  const { status } = useSession();
   const isDisabled = loading || !email.trim() || !password.trim();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,12 +33,15 @@ export default function LoginPage() {
 
     setLoading(true);
     setError("");
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    const res = await signIn("credentials", {
+      email: email.trim(),
+      password,
+      redirect: false,
+    });
     setLoading(false);
 
-    const result = login(email.trim(), password);
-    if (!result.ok) {
-      setError(result.message ?? "Credenciales incorrectas");
+    if (res?.error) {
+      setError("Credenciales incorrectas o usuario inactivo.");
       return;
     }
 
@@ -97,9 +106,13 @@ export default function LoginPage() {
             required
           />
           {error && <p className="rounded-lg border border-[#D62828]/30 bg-[#D62828]/10 px-3 py-2 text-sm font-medium text-[#D62828]">{error}</p>}
-          <div className="rounded-xl border border-[#0F4C81]/20 bg-[#F6E7C1]/40 p-3 text-xs text-slate-700">
-            <p>Admin: admin@aula.com / 123456</p>
-            <p>Docente 1: docente1@aula.com / 123456</p>
+          <div className="rounded-xl border border-[#0F4C81]/20 bg-[#F6E7C1]/40 p-3 text-xs text-slate-700 space-y-1">
+            <p className="font-semibold text-[#0B1F3A]">Usuarios (tras ejecutar el seed de Prisma)</p>
+            <p>Admin demo: admin@aula.com — contraseña 123456</p>
+            <p>Admin institucional: admin@virgendelcarmen.edu.pe — contraseña Admin123*</p>
+            <p>Docente 1: docente1@aula.com — 123456</p>
+            <p>Docente 2: docente2@aula.com — 123456</p>
+            <p className="pt-1 text-[#0F4C81]">Si no ingresa: en la carpeta del proyecto ejecute npx prisma db seed (con DATABASE_URL correcto).</p>
           </div>
           <Button
             type="submit"

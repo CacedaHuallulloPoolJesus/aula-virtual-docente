@@ -2,6 +2,7 @@
  * Agentes inteligentes — lógica local simulada.
  * Preparado para conectar con API externa: establecer process.env.NEXT_PUBLIC_AI_API_URL y enviar el payload.
  */
+import { AttendanceStatus } from "@prisma/client";
 import type {
   ActivityRecommendationOutput,
   AgentsDataContext,
@@ -45,6 +46,14 @@ function studentName(s: Student) {
 
 function promedioNotas(g: GradeRecord) {
   return (g.note1 + g.note2 + g.note3) / 3;
+}
+
+function isAbsentStatus(status: string) {
+  return status === "FALTA" || status === AttendanceStatus.ABSENT;
+}
+
+function isLateStatus(status: string) {
+  return status === "TARDE" || status === AttendanceStatus.LATE;
 }
 
 /** Agente 1: Generador de sesiones de aprendizaje */
@@ -141,8 +150,8 @@ export async function generatePedagogicalAlerts(ctx: AgentsDataContext): Promise
   const tardanzasPorEstudiante = new Map<string, number>();
 
   for (const a of ctx.attendance) {
-    if (a.status === "FALTA") faltasPorEstudiante.set(a.studentId, (faltasPorEstudiante.get(a.studentId) ?? 0) + 1);
-    if (a.status === "TARDE") tardanzasPorEstudiante.set(a.studentId, (tardanzasPorEstudiante.get(a.studentId) ?? 0) + 1);
+    if (isAbsentStatus(a.status)) faltasPorEstudiante.set(a.studentId, (faltasPorEstudiante.get(a.studentId) ?? 0) + 1);
+    if (isLateStatus(a.status)) tardanzasPorEstudiante.set(a.studentId, (tardanzasPorEstudiante.get(a.studentId) ?? 0) + 1);
   }
 
   for (const [studentId, count] of faltasPorEstudiante) {
@@ -270,7 +279,7 @@ export async function teacherAssistantResponse(
   if (q.includes("falt") || q.includes("asistencia")) {
     const counts = new Map<string, number>();
     for (const a of ctx.attendance) {
-      if (a.status === "FALTA") counts.set(a.studentId, (counts.get(a.studentId) ?? 0) + 1);
+      if (isAbsentStatus(a.status)) counts.set(a.studentId, (counts.get(a.studentId) ?? 0) + 1);
     }
     const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
     if (!top.length) return "No hay registros de faltas en los datos actuales.";

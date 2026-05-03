@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Role, StudentStatus, TeacherStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 
@@ -6,6 +6,8 @@ async function main() {
   const adminPassword = await bcrypt.hash("Admin123*", 10);
   const demoPassword = await bcrypt.hash("123456", 10);
 
+  await prisma.report.deleteMany();
+  await prisma.agentLog.deleteMany();
   await prisma.generatedSession.deleteMany();
   await prisma.learningSession.deleteMany();
   await prisma.gradeRecord.deleteMany();
@@ -19,32 +21,35 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
 
-  const grade1 = await prisma.grade.upsert({
-    where: { name: "1ro Primaria" },
-    update: {},
-    create: { name: "1ro Primaria" },
-  });
-  const grade2 = await prisma.grade.upsert({
-    where: { name: "2do Primaria" },
-    update: {},
-    create: { name: "2do Primaria" },
-  });
-
-  const sectionA = await prisma.section.upsert({
-    where: { gradeId_name: { gradeId: grade1.id, name: "A" } },
-    update: {},
-    create: { name: "A", gradeId: grade1.id },
-  });
-  const sectionB = await prisma.section.upsert({
-    where: { gradeId_name: { gradeId: grade2.id, name: "B" } },
-    update: {},
-    create: { name: "B", gradeId: grade2.id },
-  });
-
-  const period = await prisma.academicPeriod.upsert({
-    where: { name: "2026-I" },
+  await prisma.systemConfig.upsert({
+    where: { id: "default" },
     update: {},
     create: {
+      id: "default",
+      institutionName: "Institución Educativa Virgen del Carmen",
+      modularCode: "1234567",
+      address: "Huayucachi",
+      district: "Huancayo",
+      province: "Huancayo",
+      region: "Junín",
+      academicYear: "2026",
+      directorName: "Director(a) I.E. Virgen del Carmen",
+      logoUrl: "/insignia.png",
+      primaryColor: "#0B1F3A",
+      secondaryColor: "#0F4C81",
+      accentColor: "#F2B705",
+      periodsJson: JSON.stringify(["I Bimestre", "II Bimestre", "III Bimestre", "IV Bimestre"]),
+    },
+  });
+
+  const grade1 = await prisma.grade.create({ data: { name: "1ro Primaria" } });
+  const grade2 = await prisma.grade.create({ data: { name: "2do Primaria" } });
+
+  const sectionA = await prisma.section.create({ data: { name: "A", gradeId: grade1.id } });
+  const sectionB = await prisma.section.create({ data: { name: "B", gradeId: grade2.id } });
+
+  const period = await prisma.academicPeriod.create({
+    data: {
       name: "2026-I",
       startDate: new Date("2026-03-10"),
       endDate: new Date("2026-07-20"),
@@ -52,148 +57,161 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
-    where: { email: "admin@virgendelcarmen.edu.pe" },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       email: "admin@virgendelcarmen.edu.pe",
       password: adminPassword,
       role: Role.ADMIN,
     },
   });
 
-  await prisma.user.upsert({
-    where: { email: "admin@aula.com" },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       email: "admin@aula.com",
       password: demoPassword,
       role: Role.ADMIN,
     },
   });
 
-  const teacherUser = await prisma.user.upsert({
-    where: { email: "docente@virgendelcarmen.edu.pe" },
-    update: {},
-    create: {
-      email: "docente@virgendelcarmen.edu.pe",
-      password: demoPassword,
-      role: Role.TEACHER,
-      teacher: { create: { fullName: "Docente Demo" } },
-    },
-    include: { teacher: true },
-  });
-  await prisma.user.upsert({
-    where: { email: "docente1@aula.com" },
-    update: {},
-    create: {
+  const t1User = await prisma.user.create({
+    data: {
       email: "docente1@aula.com",
       password: demoPassword,
       role: Role.TEACHER,
-      teacher: { create: { fullName: "Rosa Quispe Huamán" } },
+      teacher: {
+        create: {
+          firstName: "Rosa",
+          lastName: "Quispe Huamán",
+          fullName: "Rosa Quispe Huamán",
+          dni: "40123456",
+          status: TeacherStatus.ACTIVE,
+          assignedGradeId: grade1.id,
+          assignedSectionId: sectionA.id,
+        },
+      },
     },
+    include: { teacher: true },
   });
-  await prisma.user.upsert({
-    where: { email: "docente2@aula.com" },
-    update: {},
-    create: {
+
+  const t2User = await prisma.user.create({
+    data: {
       email: "docente2@aula.com",
       password: demoPassword,
       role: Role.TEACHER,
-      teacher: { create: { fullName: "Carlos Huanca Salazar" } },
-    },
-  });
-
-  if (!teacherUser.teacher) return;
-
-  const mathCourse = await prisma.course.upsert({
-    where: {
-      name_sectionId_periodId: {
-        name: "Matemática",
-        sectionId: sectionA.id,
-        periodId: period.id,
+      teacher: {
+        create: {
+          firstName: "Carlos",
+          lastName: "Huanca Salazar",
+          fullName: "Carlos Huanca Salazar",
+          dni: "40234567",
+          status: TeacherStatus.ACTIVE,
+          assignedGradeId: grade2.id,
+          assignedSectionId: sectionB.id,
+        },
       },
     },
-    update: {},
-    create: {
+    include: { teacher: true },
+  });
+
+  const teacher1 = t1User.teacher!;
+  const teacher2 = t2User.teacher!;
+
+  const mathCourse = await prisma.course.create({
+    data: {
       name: "Matemática",
       gradeId: grade1.id,
       sectionId: sectionA.id,
-      teacherId: teacherUser.teacher.id,
+      teacherId: teacher1.id,
       periodId: period.id,
     },
   });
-  const communicationCourse = await prisma.course.upsert({
-    where: {
-      name_sectionId_periodId: {
-        name: "Comunicación",
-        sectionId: sectionB.id,
-        periodId: period.id,
-      },
-    },
-    update: {},
-    create: {
+  const communicationCourse = await prisma.course.create({
+    data: {
       name: "Comunicación",
       gradeId: grade2.id,
       sectionId: sectionB.id,
-      teacherId: teacherUser.teacher.id,
+      teacherId: teacher2.id,
       periodId: period.id,
     },
   });
 
-  const student1 = await prisma.student.upsert({
-    where: { code: "STD-001" },
-    update: {},
-    create: {
-      fullName: "Juan Perez Huaman",
+  const student1 = await prisma.student.create({
+    data: {
       code: "STD-001",
+      firstName: "Juan",
+      lastName: "Pérez Huamán",
+      fullName: "Juan Pérez Huamán",
+      dni: "72345678",
+      birthDate: new Date("2017-05-12"),
+      guardian: "Elena Huamán",
+      guardianPhone: "987654321",
+      address: "Huayucachi Centro",
       gradeId: grade1.id,
       sectionId: sectionA.id,
+      status: StudentStatus.ACTIVE,
     },
   });
-  const student2 = await prisma.student.upsert({
-    where: { code: "STD-002" },
-    update: {},
-    create: {
-      fullName: "Maria Quispe Rojas",
+  const student2 = await prisma.student.create({
+    data: {
       code: "STD-002",
+      firstName: "María",
+      lastName: "Quispe Rojas",
+      fullName: "María Quispe Rojas",
+      dni: "73456789",
+      birthDate: new Date("2017-10-01"),
+      guardian: "Luis Quispe",
+      guardianPhone: "945612378",
+      address: "Anexo Pucará",
       gradeId: grade1.id,
       sectionId: sectionA.id,
+      status: StudentStatus.ACTIVE,
     },
   });
-  const student3 = await prisma.student.upsert({
-    where: { code: "STD-003" },
-    update: {},
-    create: {
-      fullName: "Luis Salazar Huanca",
+  const student3 = await prisma.student.create({
+    data: {
       code: "STD-003",
+      firstName: "Luis",
+      lastName: "Salazar Huanca",
+      fullName: "Luis Salazar Huanca",
+      dni: "74567891",
+      birthDate: new Date("2016-08-22"),
+      guardian: "Ana Huanca",
+      guardianPhone: "956789123",
+      address: "Huancayo",
       gradeId: grade2.id,
       sectionId: sectionB.id,
+      status: StudentStatus.ACTIVE,
     },
   });
 
   await prisma.gradeRecord.createMany({
     data: [
       {
-        score: 14.0,
+        note1: 14,
+        note2: 15,
+        note3: 16,
         area: "Matemática",
         studentId: student1.id,
         courseId: mathCourse.id,
-        teacherId: teacherUser.teacher.id,
+        teacherId: teacher1.id,
       },
       {
-        score: 16.5,
+        note1: 18,
+        note2: 17,
+        note3: 19,
         area: "Matemática",
         studentId: student2.id,
         courseId: mathCourse.id,
-        teacherId: teacherUser.teacher.id,
+        teacherId: teacher1.id,
       },
       {
-        score: 10.5,
+        note1: 10,
+        note2: 11,
+        note3: 9,
         area: "Comunicación",
         studentId: student3.id,
         courseId: communicationCourse.id,
-        teacherId: teacherUser.teacher.id,
+        teacherId: teacher2.id,
       },
     ],
   });
@@ -205,45 +223,47 @@ async function main() {
         status: "PRESENT",
         studentId: student1.id,
         sectionId: sectionA.id,
-        teacherId: teacherUser.teacher.id,
+        teacherId: teacher1.id,
       },
       {
         date: new Date("2026-04-25"),
         status: "LATE",
         studentId: student2.id,
         sectionId: sectionA.id,
-        teacherId: teacherUser.teacher.id,
+        teacherId: teacher1.id,
       },
       {
         date: new Date("2026-04-25"),
         status: "JUSTIFIED",
+        justification: "Cita médica",
         studentId: student3.id,
         sectionId: sectionB.id,
-        teacherId: teacherUser.teacher.id,
+        teacherId: teacher2.id,
       },
     ],
   });
 
-  await prisma.learningSession.createMany({
-    data: [
-      {
-        title: "Números naturales hasta 100",
-        grade: "1ro",
-        area: "Matemática",
-        competence: "Resuelve problemas de cantidad",
-        capacity: "Usa estrategias de cálculo",
-        performance: "Representa números naturales",
-        learningPurpose: "Comprender y aplicar noción de cantidad",
-        learningEvidence: "Fichas resueltas en clase",
-        startActivity: "Motivación con situaciones cotidianas",
-        development: "Trabajo guiado y ejercicios colaborativos",
-        closure: "Socialización y retroalimentación",
-        resources: "Pizarra, fichas, material base diez",
-        evaluation: "Lista de cotejo",
-        date: new Date("2026-04-26"),
-        teacherId: teacherUser.teacher.id,
-      },
-    ],
+  await prisma.learningSession.create({
+    data: {
+      title: "Números naturales hasta 100",
+      grade: "1ro Primaria",
+      section: "A",
+      area: "Matemática",
+      competence: "Resuelve problemas de cantidad",
+      capacity: "Usa estrategias de cálculo",
+      performance: "Representa números naturales",
+      learningPurpose: "Resolver situaciones de conteo y comparación",
+      learningEvidence: "Ficha de trabajo resuelta",
+      startActivity: "Saberes previos con material concreto",
+      development: "Trabajo guiado con resolución de problemas",
+      closure: "Socialización de estrategias",
+      resources: "Base diez, pizarra, fichas",
+      evaluation: "Lista de cotejo",
+      date: new Date("2026-04-26"),
+      duration: "90 minutos",
+      generatedByIa: false,
+      teacherId: teacher1.id,
+    },
   });
 }
 

@@ -35,31 +35,48 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
+        const displayName = user.teacher
+          ? `${user.teacher.firstName} ${user.teacher.lastName}`.trim() || user.teacher.fullName
+          : user.email;
+
         return {
           id: user.id,
           email: user.email,
           role: user.role,
           teacherId: user.teacher?.id,
-          name: user.teacher?.fullName ?? user.email,
+          name: displayName,
         };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        const typedUser = user as typeof user & { role: Role; teacherId?: string };
-        token.id = user.id;
-        token.role = typedUser.role;
-        token.teacherId = typedUser.teacherId;
+      if (user?.id) {
+        const u = await prisma.user.findUnique({
+          where: { id: user.id as string },
+          include: { teacher: { include: { assignedGrade: true, assignedSection: true } } },
+        });
+        if (u) {
+          token.id = u.id;
+          token.role = u.role;
+          token.teacherId = u.teacher?.id;
+          token.assignedGradeId = u.teacher?.assignedGradeId ?? "";
+          token.assignedSectionId = u.teacher?.assignedSectionId ?? "";
+          token.assignedGradeName = u.teacher?.assignedGrade?.name ?? "";
+          token.assignedSectionName = u.teacher?.assignedSection?.name ?? "";
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.teacherId = token.teacherId;
+        session.user.id = token.id as string;
+        session.user.role = token.role as Role;
+        session.user.teacherId = token.teacherId as string | undefined;
+        session.user.assignedGradeId = (token.assignedGradeId as string) || undefined;
+        session.user.assignedSectionId = (token.assignedSectionId as string) || undefined;
+        session.user.assignedGradeName = (token.assignedGradeName as string) || undefined;
+        session.user.assignedSectionName = (token.assignedSectionName as string) || undefined;
       }
       return session;
     },

@@ -1,6 +1,7 @@
 /**
  * Datos demo centralizados (localStorage). Tipos en `src/types`.
  */
+import { StudentStatus, TeacherStatus } from "@prisma/client";
 import type { AppData } from "@/types/app";
 import { areas, periods } from "@/constants/academic";
 
@@ -23,8 +24,8 @@ export { areas, periods };
 export const initialMockData: AppData = {
   users: [
     { id: "u-admin", email: "admin@aula.com", password: "123456", role: "ADMIN" },
-    { id: "u-doc1", email: "docente1@aula.com", password: "123456", role: "DOCENTE", teacherId: "t-1" },
-    { id: "u-doc2", email: "docente2@aula.com", password: "123456", role: "DOCENTE", teacherId: "t-2" },
+    { id: "u-doc1", email: "docente1@aula.com", password: "123456", role: "TEACHER", teacherId: "t-1" },
+    { id: "u-doc2", email: "docente2@aula.com", password: "123456", role: "TEACHER", teacherId: "t-2" },
   ],
   teachers: [
     {
@@ -35,7 +36,7 @@ export const initialMockData: AppData = {
       email: "docente1@aula.com",
       grade: "1ro Primaria",
       section: "A",
-      status: "ACTIVO",
+      status: TeacherStatus.ACTIVE,
     },
     {
       id: "t-2",
@@ -45,7 +46,7 @@ export const initialMockData: AppData = {
       email: "docente2@aula.com",
       grade: "2do Primaria",
       section: "B",
-      status: "ACTIVO",
+      status: TeacherStatus.ACTIVE,
     },
   ],
   students: [
@@ -61,7 +62,7 @@ export const initialMockData: AppData = {
       guardian: "Elena Huamán",
       guardianPhone: "987654321",
       address: "Huayucachi Centro",
-      status: "ACTIVO",
+      status: StudentStatus.ACTIVE,
     },
     {
       id: "s-2",
@@ -75,7 +76,7 @@ export const initialMockData: AppData = {
       guardian: "Luis Quispe",
       guardianPhone: "945612378",
       address: "Anexo Pucará",
-      status: "ACTIVO",
+      status: StudentStatus.ACTIVE,
     },
     {
       id: "s-3",
@@ -89,7 +90,7 @@ export const initialMockData: AppData = {
       guardian: "Ana Huanca",
       guardianPhone: "956789123",
       address: "Huancayo",
-      status: "ACTIVO",
+      status: StudentStatus.ACTIVE,
     },
   ],
   attendance: [
