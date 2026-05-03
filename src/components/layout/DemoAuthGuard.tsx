@@ -15,11 +15,11 @@ export function DemoAuthGuard({ children }: { children: React.ReactNode }) {
   }, [router, status]);
 
   if (status === "loading") {
-    return <div className="p-6 text-sm text-slate-600">Validando sesión...</div>;
+    return <div className="p-6 text-sm text-secondary">Verificando la sesión, espere un momento…</div>;
   }
 
   if (status === "unauthenticated") {
-    return <div className="p-6 text-sm text-slate-600">Redirigiendo al inicio de sesión...</div>;
+    return <div className="p-6 text-sm text-secondary">Redirigiendo al inicio de sesión…</div>;
   }
 
   return <>{children}</>;

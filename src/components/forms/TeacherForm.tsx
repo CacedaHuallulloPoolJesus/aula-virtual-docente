@@ -37,7 +37,7 @@ export function TeacherForm({ form, setForm, grades, sections, editingId, onSubm
 
   return (
     <form className="grid gap-3 md:grid-cols-3" onSubmit={onSubmit}>
-      <Input label="Nombre" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
+      <Input label="Nombres" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
       <Input label="Apellidos" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
       <Input label="DNI" value={form.dni} onChange={(e) => setForm((p) => ({ ...p, dni: e.target.value }))} />
       <Input label="Correo" type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required />
@@ -49,9 +49,9 @@ export function TeacherForm({ form, setForm, grades, sections, editingId, onSubm
         required={!editingId}
       />
       <label className="text-sm">
-        <span className="mb-1 block font-medium text-slate-600">Grado asignado</span>
+        <span className="mb-1 block font-medium text-primary/80">Grado asignado</span>
         <select
-          className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+          className="w-full rounded-lg border border-secondary/20 bg-white p-2.5 text-foreground"
           value={form.assignedGradeId}
           onChange={(e) => setForm((p) => ({ ...p, assignedGradeId: e.target.value, assignedSectionId: "" }))}
         >
@@ -64,9 +64,9 @@ export function TeacherForm({ form, setForm, grades, sections, editingId, onSubm
         </select>
       </label>
       <label className="text-sm">
-        <span className="mb-1 block font-medium text-slate-600">Sección asignada</span>
+        <span className="mb-1 block font-medium text-primary/80">Sección asignada</span>
         <select
-          className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+          className="w-full rounded-lg border border-secondary/20 bg-white p-2.5 text-foreground"
           value={form.assignedSectionId}
           onChange={(e) => setForm((p) => ({ ...p, assignedSectionId: e.target.value }))}
           disabled={!form.assignedGradeId}
@@ -80,9 +80,9 @@ export function TeacherForm({ form, setForm, grades, sections, editingId, onSubm
         </select>
       </label>
       <label className="text-sm">
-        <span className="mb-1 block font-medium text-slate-600">Estado</span>
+        <span className="mb-1 block font-medium text-primary/80">Estado</span>
         <select
-          className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+          className="w-full rounded-lg border border-secondary/20 bg-white p-2.5 text-foreground"
           value={form.status}
           onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as TeacherStatus }))}
         >

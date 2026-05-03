@@ -14,11 +14,11 @@ export function Sidebar() {
   const links = role === Role.ADMIN ? ADMIN_NAV : TEACHER_NAV;
 
   return (
-    <aside className="w-full border-r border-slate-200 bg-white/95 p-4 backdrop-blur lg:sticky lg:top-0 lg:h-screen lg:w-72">
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Aula Virtual</p>
-        <h2 className="text-lg font-bold text-slate-900">{role === Role.ADMIN ? "Panel Administrador" : "Panel Docente"}</h2>
-        <p className="mt-1 text-xs text-slate-600">Gestión académica integral</p>
+    <aside className="w-full border-r border-white/10 bg-primary p-4 text-white shadow-lg shadow-primary/20 lg:sticky lg:top-0 lg:h-screen lg:w-72">
+      <div className="mb-6 rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-sm">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent">Sistema integral de aula virtual</p>
+        <h2 className="text-lg font-bold text-white">{role === Role.ADMIN ? "Panel de Administración" : "Panel Académico Docente"}</h2>
+        <p className="mt-1 text-xs text-white/75">Gestión académica institucional</p>
       </div>
       <nav className="grid gap-1">
         {links.map((link) => {
@@ -29,11 +29,15 @@ export function Sidebar() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
-                active ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                active
+                  ? "bg-secondary text-white shadow-md ring-1 ring-accent/35"
+                  : "text-white/90 hover:bg-secondary/85 hover:text-white",
               )}
             >
-              <Icon size={16} />
+              <span className={active ? "text-accent" : "text-white/80"}>
+                <Icon size={16} />
+              </span>
               {link.label}
             </Link>
           );

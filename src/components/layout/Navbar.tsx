@@ -9,20 +9,20 @@ export function Navbar() {
   const { data } = useSession();
   const user = data?.user;
   const displayName = user?.name ?? user?.email ?? "Usuario";
-  const roleLabel = user?.role === Role.ADMIN ? "Administrador" : "Docente";
+  const roleLabel = user?.role === Role.ADMIN ? "Administración" : "Docente";
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur">
+    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-secondary/15 bg-white px-6 py-3 shadow-sm shadow-primary/5 backdrop-blur">
       <div>
-        <h1 className="text-lg font-bold text-slate-900">Sistema Integral de Aula Virtual Docente</h1>
-        <p className="inline-flex items-center gap-1 text-xs text-slate-600">
-          <ShieldCheck size={12} className="text-blue-600" />
-          {displayName} — {roleLabel}
+        <h1 className="text-lg font-bold text-primary">Sistema Integral de Aula Virtual Docente</h1>
+        <p className="inline-flex items-center gap-1 text-xs text-secondary">
+          <ShieldCheck size={12} className="text-secondary" />
+          {displayName} · {roleLabel} · Panel Académico Docente
         </p>
       </div>
       <Button variant="secondary" className="inline-flex items-center gap-2" onClick={() => signOut({ callbackUrl: "/login" })}>
         <LogOut size={15} />
-        Salir
+        Cerrar sesión
       </Button>
     </header>
   );

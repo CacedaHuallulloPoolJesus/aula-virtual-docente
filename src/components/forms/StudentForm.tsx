@@ -41,9 +41,9 @@ export function StudentForm({ form, setForm, editingId, onSubmit, onCancel }: Pr
       <Input label="Teléfono apoderado" value={form.guardianPhone} onChange={(e) => setForm((p) => ({ ...p, guardianPhone: e.target.value }))} required />
       <Input label="Dirección" value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} required />
       <label className="text-sm md:col-span-2">
-        <span className="mb-1 block font-medium text-slate-600">Estado</span>
+        <span className="mb-1 block font-medium text-primary/80">Estado</span>
         <select
-          className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+          className="w-full max-w-md rounded-lg border border-secondary/20 bg-white p-2.5 text-foreground"
           value={form.status}
           onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as StudentStatus }))}
         >

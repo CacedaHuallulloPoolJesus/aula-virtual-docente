@@ -30,7 +30,7 @@ export function AgentCard({ title, description, icon: Icon, accentColor, blue, o
           </div>
         </div>
         <Button className="mt-6 w-full" variant="primary" onClick={onUse}>
-          Usar agente
+          Utilizar asistente
         </Button>
       </div>
     </Card>

@@ -15,10 +15,10 @@ export function MetricCard({
   return (
     <Card className={className}>
       <div className="flex items-start justify-between">
-        <p className="text-sm font-medium">{title}</p>
-        <Icon size={18} />
+        <p className="text-sm font-medium text-primary/80">{title}</p>
+        <Icon size={18} className="text-secondary" />
       </div>
-      <p className="mt-2 text-2xl font-bold">{value}</p>
+      <p className="mt-2 text-2xl font-bold text-primary">{value}</p>
     </Card>
   );
 }

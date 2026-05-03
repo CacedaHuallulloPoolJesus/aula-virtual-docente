@@ -11,10 +11,10 @@ export const authOptions: AuthOptions = {
   pages: { signIn: "/login" },
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: "Credenciales institucionales",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: { label: "Correo institucional", type: "email" },
+        password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {

@@ -295,7 +295,7 @@ export async function teacherAssistantResponse(
 }
 
 export function priorityStyles(p: PedagogicalAlert["prioridad"]) {
-  if (p === "alta") return "border-[#D62828]/40 bg-[#D62828]/10 text-[#0B1F3A]";
-  if (p === "media") return "border-[#F2B705]/50 bg-[#F6E7C1]/60 text-[#0B1F3A]";
-  return "border-[#0F4C81]/30 bg-[#0F4C81]/5 text-[#0B1F3A]";
+  if (p === "alta") return "border-danger/40 bg-danger/10 text-primary";
+  if (p === "media") return "border-accent/50 bg-cream/70 text-primary";
+  return "border-secondary/30 bg-secondary/5 text-primary";
 }

@@ -37,8 +37,8 @@ export default function ConfiguracionPage() {
   if (session?.user?.role !== Role.ADMIN) {
     return (
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-slate-900">Configuración</h2>
-        <Card className="text-slate-700">Solo el administrador puede modificar la configuración institucional.</Card>
+        <h2 className="text-2xl font-bold text-primary">Configuración Institucional</h2>
+        <Card className="text-foreground/85">Solo el administrador puede modificar la configuración del sistema.</Card>
       </section>
     );
   }
@@ -46,8 +46,8 @@ export default function ConfiguracionPage() {
   if (!cfg) {
     return (
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-slate-900">Configuración</h2>
-        <Card>Cargando...</Card>
+        <h2 className="text-2xl font-bold text-primary">Configuración Institucional</h2>
+        <Card>Cargando configuración…</Card>
       </section>
     );
   }
@@ -68,8 +68,8 @@ export default function ConfiguracionPage() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-bold text-slate-900">Configuración institucional</h2>
-      <Card className="border-blue-100">
+      <h2 className="text-2xl font-bold text-primary">Configuración Institucional</h2>
+      <Card>
         <form className="grid gap-3 md:grid-cols-2" onSubmit={(e) => void save(e)}>
           <Input label="Nombre de la institución" value={cfg.institutionName} onChange={(e) => setCfg({ ...cfg, institutionName: e.target.value })} required />
           <Input label="Código modular" value={cfg.modularCode ?? ""} onChange={(e) => setCfg({ ...cfg, modularCode: e.target.value || null })} />
@@ -82,7 +82,7 @@ export default function ConfiguracionPage() {
           <Input label="URL del logo" value={cfg.logoUrl ?? ""} onChange={(e) => setCfg({ ...cfg, logoUrl: e.target.value || null })} className="md:col-span-2" />
           <Input label="Color primario (hex)" value={cfg.primaryColor ?? ""} onChange={(e) => setCfg({ ...cfg, primaryColor: e.target.value || null })} />
           <Input label="Color secundario (hex)" value={cfg.secondaryColor ?? ""} onChange={(e) => setCfg({ ...cfg, secondaryColor: e.target.value || null })} />
-          <Input label="Periodos (JSON opcional)" value={cfg.periodsJson ?? ""} onChange={(e) => setCfg({ ...cfg, periodsJson: e.target.value || null })} className="md:col-span-2" />
+          <Input label="Períodos (JSON opcional)" value={cfg.periodsJson ?? ""} onChange={(e) => setCfg({ ...cfg, periodsJson: e.target.value || null })} className="md:col-span-2" />
           <div className="md:col-span-2">
             <Button type="submit" variant="primary" disabled={saving}>
               {saving ? "Guardando..." : "Guardar configuración"}

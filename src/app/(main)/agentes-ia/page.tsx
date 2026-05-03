@@ -251,36 +251,36 @@ export default function AgentesIaPage() {
   const agents = [
     {
       id: "session" as const,
-      title: "Generador de Sesiones",
-      desc: "Planifica inicio, desarrollo, cierre, recursos, evidencia e instrumentos a partir de competencias y propósito.",
+      title: "Generador de sesiones de aprendizaje",
+      desc: "Planifica inicio, desarrollo, cierre, recursos, evidencia e instrumentos a partir de competencias y propósito de aprendizaje.",
       icon: Sparkles,
       accent: COLORS.gold,
     },
     {
       id: "performance" as const,
-      title: "Analizador de Rendimiento",
-      desc: "Interpreta notas del aula: promedios por área, estudiantes en riesgo y recomendaciones pedagógicas.",
+      title: "Analizador de rendimiento académico",
+      desc: "Interpreta las notas del aula: promedios por área, estudiantes en situación de riesgo y recomendaciones pedagógicas.",
       icon: BarChart3,
       accent: COLORS.blue,
     },
     {
       id: "alerts" as const,
-      title: "Alertas Pedagógicas",
-      desc: "Cruza asistencia y calificaciones para priorizar intervenciones (faltas, bajo promedio, tardanzas).",
+      title: "Alertas pedagógicas",
+      desc: "Cruza asistencia y evaluaciones para priorizar intervenciones (faltas, bajo promedio, tardanzas).",
       icon: AlertTriangle,
       accent: COLORS.red,
     },
     {
       id: "activities" as const,
-      title: "Recomendador de Actividades",
-      desc: "Sugiere refuerzo según área, nivel de logro (AD–C) y dificultad declarada.",
+      title: "Recomendador de actividades",
+      desc: "Sugiere actividades de refuerzo según área, nivel de logro (AD–C) y dificultad declarada.",
       icon: Lightbulb,
       accent: COLORS.green,
     },
     {
       id: "assistant" as const,
-      title: "Asistente Docente",
-      desc: "Consultas rápidas sobre riesgo, actividades, sesiones o asistencia usando los datos cargados.",
+      title: "Asistente docente",
+      desc: "Consultas breves sobre riesgo académico, actividades, sesiones de aprendizaje o asistencia, con base en los datos registrados.",
       icon: MessageCircle,
       accent: COLORS.blue,
     },
@@ -352,7 +352,7 @@ export default function AgentesIaPage() {
   }
 
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-slate-50 to-white pb-12">
+    <div className="min-h-screen space-y-8 bg-gradient-to-b from-background to-white pb-12">
       <header
         className="rounded-3xl border border-[#0F4C81]/20 p-8 text-white shadow-lg"
         style={{
@@ -361,25 +361,24 @@ export default function AgentesIaPage() {
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F6E7C1]/90">Módulo innovador</p>
-            <h1 className="mt-2 flex items-center gap-3 text-3xl font-bold tracking-tight">
-              <Bot className="h-9 w-9 text-[#F2B705]" aria-hidden />
-              Agentes IA
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cream/90">Módulo innovador</p>
+            <h1 className="mt-2 flex items-center gap-3 text-3xl font-bold tracking-tight text-white">
+              <Bot className="h-9 w-9 text-accent" aria-hidden />
+              Agentes de Inteligencia Artificial
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-200">
               Asistentes para planificación pedagógica, análisis de rendimiento y decisiones basadas en los datos del aula
-              (estudiantes, notas, asistencia y sesiones). Las respuestas son simuladas de forma coherente; puede conectarse
-              una API real mediante <code className="rounded bg-black/20 px-1">NEXT_PUBLIC_AI_API_URL</code>.
+              (estudiantes, notas, asistencia y sesiones de aprendizaje). Las respuestas son simuladas de forma coherente; puede conectarse
+              a un servicio externo mediante la variable <code className="rounded bg-black/20 px-1">NEXT_PUBLIC_AI_API_URL</code>.
             </p>
           </div>
           <div
-            className="rounded-2xl border px-4 py-3 text-xs text-[#0B1F3A] shadow-sm"
-            style={{ backgroundColor: COLORS.cream, borderColor: `${COLORS.gold}66` }}
+            className="rounded-2xl border border-accent/40 bg-cream px-4 py-3 text-xs text-primary shadow-sm"
           >
-            <p className="font-semibold text-[#0B1F3A]">Contexto de datos</p>
-            <p className="mt-1 text-[#0F4C81]">
-              {agentCtx.students.length} estudiantes · {agentCtx.grades.length} notas · {agentCtx.attendance.length}{" "}
-              asistencias · {agentCtx.sessions.length} sesiones
+            <p className="font-semibold text-primary">Contexto de datos</p>
+            <p className="mt-1 text-secondary">
+              {agentCtx.students.length} estudiantes · {agentCtx.grades.length} registros de notas · {agentCtx.attendance.length}{" "}
+              registros de asistencia · {agentCtx.sessions.length} sesiones de aprendizaje
             </p>
           </div>
         </div>
@@ -400,14 +399,14 @@ export default function AgentesIaPage() {
       </section>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0B1F3A]/60 p-4 backdrop-blur-sm sm:items-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary/60 p-4 backdrop-blur-sm sm:items-center">
           <div
             role="dialog"
             aria-modal
             className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-3xl border border-white/20 bg-white shadow-2xl"
           >
             <div
-              className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 text-white"
+              className="flex items-center justify-between gap-3 border-b border-white/15 px-5 py-4 text-white"
               style={{ background: `linear-gradient(90deg, ${COLORS.navy}, ${COLORS.blue})` }}
             >
               <h3 className="text-lg font-semibold">{agents.find((x) => x.id === open)?.title}</h3>
@@ -426,10 +425,10 @@ export default function AgentesIaPage() {
                 {open === "session" && (
                   <>
                     <Input label="Grado" value={sessionForm.grade} onChange={(e) => setSessionForm((p) => ({ ...p, grade: e.target.value }))} />
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-primary/85">
                       Área curricular
                       <select
-                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-xl border border-secondary/20 bg-white px-3 py-2 text-sm text-foreground"
                         value={sessionForm.area}
                         onChange={(e) => setSessionForm((p) => ({ ...p, area: e.target.value }))}
                       >
@@ -454,7 +453,7 @@ export default function AgentesIaPage() {
 
                 {open === "performance" && (
                   <>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-foreground/70">
                       Se usarán las notas y estudiantes visibles para su rol ({session?.user?.role === Role.ADMIN ? "toda la institución" : "su aula"}).
                     </p>
                     <Button variant="primary" disabled={loading} onClick={runPerformance}>
@@ -465,10 +464,10 @@ export default function AgentesIaPage() {
 
                 {open === "alerts" && (
                   <>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-foreground/70">
                       Cruza asistencia y notas del contexto actual. Prioridades: alta (rojo), media (dorado), baja (azul suave).
                     </p>
-                    <Button variant="primary" disabled={loading} onClick={runAlerts} className="bg-[#D62828] hover:bg-[#b91f1f]">
+                    <Button variant="danger" disabled={loading} onClick={runAlerts}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generar alertas"}
                     </Button>
                   </>
@@ -476,10 +475,10 @@ export default function AgentesIaPage() {
 
                 {open === "activities" && (
                   <>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-primary/85">
                       Área
                       <select
-                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-xl border border-secondary/20 bg-white px-3 py-2 text-sm text-foreground"
                         value={activityForm.area}
                         onChange={(e) => setActivityForm((p) => ({ ...p, area: e.target.value }))}
                       >
@@ -490,10 +489,10 @@ export default function AgentesIaPage() {
                         ))}
                       </select>
                     </label>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-primary/85">
                       Nivel de logro
                       <select
-                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-xl border border-secondary/20 bg-white px-3 py-2 text-sm text-foreground"
                         value={activityForm.nivelLogro}
                         onChange={(e) => setActivityForm((p) => ({ ...p, nivelLogro: e.target.value as "AD" | "A" | "B" | "C" }))}
                       >
@@ -510,7 +509,7 @@ export default function AgentesIaPage() {
                       onChange={(e) => setActivityForm((p) => ({ ...p, dificultad: e.target.value }))}
                       placeholder="Ej. alta, lectora incipiente…"
                     />
-                    <Button variant="primary" disabled={loading} onClick={runActivities} className="bg-[#15803d] hover:bg-[#166534]">
+                    <Button variant="success" disabled={loading} onClick={runActivities}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sugerir actividades"}
                     </Button>
                   </>
@@ -518,13 +517,13 @@ export default function AgentesIaPage() {
 
                 {open === "assistant" && (
                   <>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-foreground/55">
                       Ejemplos: ¿Qué estudiantes están en riesgo? ¿Qué actividades puedo aplicar? ¿Qué estudiantes faltaron más?
                     </p>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-primary/85">
                       Pregunta
                       <textarea
-                        className="mt-1 min-h-[120px] w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[120px] w-full rounded-xl border border-secondary/20 bg-white px-3 py-2 text-sm text-foreground"
                         value={chatQuestion}
                         onChange={(e) => setChatQuestion(e.target.value)}
                         placeholder="Escribe tu consulta…"

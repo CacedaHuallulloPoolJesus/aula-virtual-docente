@@ -18,29 +18,29 @@ export type NavItem = {
   icon: LucideIcon;
 };
 
-/** Rutas del panel docente (orden = sidebar) */
+/** Navegación del panel docente (orden = barra lateral) */
 export const TEACHER_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/estudiantes", label: "Estudiantes", icon: Users },
-  { href: "/asistencia", label: "Asistencia", icon: CalendarCheck },
-  { href: "/notas", label: "Notas", icon: ClipboardList },
-  { href: "/sesiones", label: "Sesiones", icon: BookOpen },
-  { href: "/ia-sesiones", label: "IA Sesiones", icon: Bot },
-  { href: "/agentes-ia", label: "Agentes IA", icon: Sparkles },
-  { href: "/reportes", label: "Reportes", icon: BarChart3 },
+  { href: "/dashboard", label: "Panel Académico Docente", icon: LayoutDashboard },
+  { href: "/estudiantes", label: "Gestión de Estudiantes", icon: Users },
+  { href: "/asistencia", label: "Registro de Asistencia", icon: CalendarCheck },
+  { href: "/notas", label: "Evaluación de Notas", icon: ClipboardList },
+  { href: "/sesiones", label: "Sesiones de Aprendizaje", icon: BookOpen },
+  { href: "/ia-sesiones", label: "Sesiones con Inteligencia Artificial", icon: Bot },
+  { href: "/agentes-ia", label: "Agentes de Inteligencia Artificial", icon: Sparkles },
+  { href: "/reportes", label: "Reportes Académicos", icon: BarChart3 },
 ];
 
-/** Rutas del panel administrador */
+/** Navegación del panel administrador */
 export const ADMIN_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/docentes", label: "Docentes", icon: UserSquare2 },
-  { href: "/grados-secciones", label: "Grados y secciones", icon: BookOpen },
-  { href: "/estudiantes", label: "Estudiantes", icon: Users },
-  { href: "/asistencia", label: "Asistencia", icon: CalendarCheck },
-  { href: "/notas", label: "Notas", icon: ClipboardList },
-  { href: "/sesiones", label: "Sesiones", icon: BookOpen },
-  { href: "/ia-sesiones", label: "IA Sesiones", icon: Bot },
-  { href: "/agentes-ia", label: "Agentes IA", icon: Sparkles },
-  { href: "/reportes", label: "Reportes", icon: BarChart3 },
+  { href: "/dashboard", label: "Panel Académico Docente", icon: LayoutDashboard },
+  { href: "/docentes", label: "Gestión del Personal Docente", icon: UserSquare2 },
+  { href: "/grados-secciones", label: "Grados y Secciones", icon: BookOpen },
+  { href: "/estudiantes", label: "Gestión de Estudiantes", icon: Users },
+  { href: "/asistencia", label: "Registro de Asistencia", icon: CalendarCheck },
+  { href: "/notas", label: "Evaluación de Notas", icon: ClipboardList },
+  { href: "/sesiones", label: "Sesiones de Aprendizaje", icon: BookOpen },
+  { href: "/ia-sesiones", label: "Sesiones con Inteligencia Artificial", icon: Bot },
+  { href: "/agentes-ia", label: "Agentes de Inteligencia Artificial", icon: Sparkles },
+  { href: "/reportes", label: "Reportes Académicos", icon: BarChart3 },
   { href: "/configuracion", label: "Configuración", icon: Settings },
 ];

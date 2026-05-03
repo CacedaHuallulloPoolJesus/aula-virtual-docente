@@ -33,10 +33,14 @@ export function GradesForm({
 }: Props) {
   return (
     <>
-      <Card className="grid gap-3 border-amber-100 md:grid-cols-2">
+      <Card className="grid gap-3 md:grid-cols-2">
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-600">Área curricular</span>
-          <select value={area} onChange={(e) => setArea(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900">
+          <span className="mb-1 block font-medium text-primary/80">Área curricular</span>
+          <select
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
+            className="w-full rounded-lg border border-secondary/25 bg-white p-2.5 text-foreground"
+          >
             {areas.map((item) => (
               <option key={item}>
                 {item}
@@ -45,8 +49,12 @@ export function GradesForm({
           </select>
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-600">Periodo / bimestre</span>
-          <select value={periodId} onChange={(e) => setPeriodId(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900">
+          <span className="mb-1 block font-medium text-primary/80">Período / bimestre</span>
+          <select
+            value={periodId}
+            onChange={(e) => setPeriodId(e.target.value)}
+            className="w-full rounded-lg border border-secondary/25 bg-white p-2.5 text-foreground"
+          >
             {periodOptions.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -55,9 +63,9 @@ export function GradesForm({
           </select>
         </label>
       </Card>
-      <Card className="overflow-auto border-amber-100">
-        <table className="min-w-full text-left text-sm text-slate-700">
-          <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-800">
+      <Card className="overflow-auto">
+        <table className="min-w-full text-left text-sm text-foreground/90">
+          <thead className="border-b border-secondary/30 bg-secondary text-sm font-semibold text-white">
             <tr>
               <th className="px-3 py-2">Código</th>
               <th className="px-3 py-2">Estudiante</th>
@@ -70,11 +78,11 @@ export function GradesForm({
               <th className="px-3 py-2">Riesgo</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&>tr:nth-child(even)]:bg-primary/[0.03]">
             {rows.map((row) => (
-              <tr key={row.student.id} className="border-b border-slate-200 hover:bg-slate-50">
+              <tr key={row.student.id} className="border-b border-secondary/10 transition-colors hover:bg-cream/50">
                 <td className="px-3 py-2">{row.student.code}</td>
-                <td className="px-3 py-2 text-slate-900">
+                <td className="px-3 py-2 text-foreground">
                   {row.student.firstName} {row.student.lastName}
                 </td>
                 <td className="px-3 py-2">{area}</td>
@@ -86,21 +94,21 @@ export function GradesForm({
                       max={20}
                       value={row.values[field]}
                       onChange={(e) => onChangeNote(row.student.id, field, Number(e.target.value))}
-                      className="w-20 rounded border border-slate-200 p-1.5 text-slate-900"
+                      className="w-20 rounded border border-secondary/20 p-1.5 text-foreground"
                     />
                   </td>
                 ))}
-                <td className="px-3 py-2 font-semibold text-slate-900">{row.promedio.toFixed(1)}</td>
+                <td className="px-3 py-2 font-semibold text-foreground">{row.promedio.toFixed(1)}</td>
                 <td className="px-3 py-2">
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-semibold ${
                       row.nivel === "AD"
-                        ? "bg-blue-100 text-blue-700"
+                        ? "bg-primary/12 text-primary ring-1 ring-primary/20"
                         : row.nivel === "A"
-                          ? "bg-emerald-100 text-emerald-700"
+                          ? "bg-secondary/12 text-secondary ring-1 ring-secondary/25"
                           : row.nivel === "B"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-rose-100 text-rose-700"
+                            ? "bg-accent/35 text-primary ring-1 ring-accent/45"
+                            : "bg-danger/12 text-danger ring-1 ring-danger/25"
                     }`}
                   >
                     {row.nivel}
@@ -108,9 +116,13 @@ export function GradesForm({
                 </td>
                 <td className="px-3 py-2">
                   {row.riesgo ? (
-                    <span className="rounded-full bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700">Riesgo académico</span>
+                    <span className="rounded-full bg-danger/12 px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger/25">
+                      Riesgo académico
+                    </span>
                   ) : (
-                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">Sin riesgo</span>
+                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800 ring-1 ring-emerald-200/80">
+                      Sin riesgo
+                    </span>
                   )}
                 </td>
               </tr>
@@ -118,7 +130,7 @@ export function GradesForm({
           </tbody>
         </table>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="warning" onClick={onSave}>
+          <Button variant="primary" onClick={onSave}>
             Guardar notas
           </Button>
           <Button variant="secondary" onClick={onClearDraft}>

@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <DemoAuthGuard>
-      <div className="min-h-screen bg-slate-50 lg:flex">
+      <div className="min-h-screen bg-background lg:flex">
         <Sidebar />
         <div className="flex-1">
           <Navbar />

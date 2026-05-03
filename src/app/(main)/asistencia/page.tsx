@@ -105,10 +105,10 @@ export default function AsistenciaPage() {
   }
 
   function badge(st: AttendanceStatus) {
-    if (st === AttendanceStatus.PRESENT) return "bg-emerald-100 text-emerald-700";
-    if (st === AttendanceStatus.LATE) return "bg-amber-100 text-amber-700";
-    if (st === AttendanceStatus.ABSENT) return "bg-rose-100 text-rose-700";
-    return "bg-blue-100 text-blue-700";
+    if (st === AttendanceStatus.PRESENT) return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80";
+    if (st === AttendanceStatus.LATE) return "bg-accent/30 text-primary ring-1 ring-accent/45";
+    if (st === AttendanceStatus.ABSENT) return "bg-danger/12 text-danger ring-1 ring-danger/25";
+    return "bg-secondary/15 text-secondary ring-1 ring-secondary/25";
   }
 
   function statusLabel(st: AttendanceStatus) {
@@ -120,8 +120,8 @@ export default function AsistenciaPage() {
 
   return (
     <section className="space-y-5">
-      <h2 className="text-2xl font-bold text-slate-900">Módulo de asistencia</h2>
-      <Card className="space-y-3 border-emerald-100">
+      <h2 className="text-2xl font-bold text-primary">Registro de Asistencia</h2>
+      <Card className="space-y-3">
         <div className="grid gap-3 md:grid-cols-3">
           <Input label="Fecha" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           {role === Role.ADMIN && (
@@ -163,20 +163,20 @@ export default function AsistenciaPage() {
         </div>
       </Card>
 
-      <Card className="overflow-auto border-emerald-100">
+      <Card className="overflow-auto">
         <table className="min-w-full text-left text-sm text-slate-700">
-          <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-800">
+          <thead className="border-b border-secondary/30 bg-secondary text-sm font-semibold text-white">
             <tr>
               <th className="px-3 py-2">Estudiante</th>
               <th className="px-3 py-2">Estado</th>
               <th className="px-3 py-2">Justificación</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&>tr:nth-child(even)]:bg-primary/[0.03]">
             {filteredStudents.map((student) => {
               const st = statusMap[student.id] ?? AttendanceStatus.PRESENT;
               return (
-                <tr key={student.id} className="border-b border-slate-200 hover:bg-slate-50">
+                <tr key={student.id} className="border-b border-secondary/10 transition-colors hover:bg-cream/50">
                   <td className="px-3 py-2 text-slate-900">
                     {student.firstName} {student.lastName}
                   </td>
@@ -222,7 +222,7 @@ export default function AsistenciaPage() {
       <Card className="overflow-auto">
         <h3 className="mb-2 text-base font-semibold text-slate-900">Historial de asistencia</h3>
         <table className="min-w-full text-left text-sm text-slate-700">
-          <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-800">
+          <thead className="border-b border-secondary/30 bg-secondary text-sm font-semibold text-white">
             <tr>
               <th className="px-3 py-2">Fecha</th>
               <th className="px-3 py-2">Estudiante</th>
@@ -231,9 +231,9 @@ export default function AsistenciaPage() {
               <th className="px-3 py-2">Registrado por</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&>tr:nth-child(even)]:bg-primary/[0.03]">
             {history.map((item) => (
-              <tr key={item.id} className="border-b border-slate-200 hover:bg-slate-50">
+              <tr key={item.id} className="border-b border-secondary/10 transition-colors hover:bg-cream/50">
                 <td className="px-3 py-2">{new Date(item.date).toLocaleDateString("es-PE")}</td>
                 <td className="px-3 py-2">
                   {item.student.firstName} {item.student.lastName}

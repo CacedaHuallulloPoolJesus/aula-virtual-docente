@@ -149,8 +149,8 @@ export function IaSessionForm() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card className="border-purple-100">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Generador inteligente de sesiones</h2>
+      <Card>
+        <h2 className="mb-4 text-lg font-semibold text-primary">Generador inteligente de sesiones</h2>
         <form className="space-y-3" onSubmit={(e) => void handleSubmit(e)}>
           <Input label="Grado" name="grade" placeholder="3ro primaria" defaultValue={session?.user?.assignedGradeName ?? ""} required />
           <Input label="Sección" name="section" placeholder="A" defaultValue={session?.user?.assignedSectionName ?? ""} required />
@@ -159,15 +159,15 @@ export function IaSessionForm() {
           <Input label="Competencia" name="competence" placeholder="Lee diversos tipos de textos" required />
           <Input label="Duración" name="duration" placeholder="90 minutos" defaultValue="90 minutos" required />
           <Input label="Propósito de aprendizaje" name="purpose" placeholder="Inferir información implícita" required />
-          <Button type="submit" variant="purple" className="w-full" disabled={loading}>
-            {loading ? "Generando..." : "Generar sesión inteligente"}
+          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+            {loading ? "Generando propuesta…" : "Generar sesión inteligente"}
           </Button>
         </form>
       </Card>
-      <Card className="border-purple-100">
-        <h3 className="mb-3 font-semibold text-slate-900">Resultado editable</h3>
+      <Card>
+        <h3 className="mb-3 font-semibold text-primary">Resultado editable</h3>
         {result ? (
-          <div className="space-y-2 text-sm text-slate-700">
+          <div className="space-y-2 text-sm text-foreground/90">
             <Input label="Título" value={result.title} onChange={(e) => updateField("title", e.target.value)} />
             <Input label="Propósito" value={result.learningPurpose} onChange={(e) => updateField("learningPurpose", e.target.value)} />
             <Input label="Competencia" value={result.competence} onChange={(e) => updateField("competence", e.target.value)} />
@@ -181,7 +181,7 @@ export function IaSessionForm() {
             <Input label="Evaluación" value={result.evaluation} onChange={(e) => updateField("evaluation", e.target.value)} />
             <Input label="Instrumento" value={result.instrument} onChange={(e) => updateField("instrument", e.target.value)} />
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="purple" onClick={() => void saveSession()}>
+              <Button variant="secondary" onClick={() => void saveSession()}>
                 Guardar sesión
               </Button>
               <Button variant="secondary" onClick={() => void exportPdf()}>
@@ -193,7 +193,7 @@ export function IaSessionForm() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Completa el formulario para generar una propuesta de sesión.</p>
+          <p className="text-sm text-foreground/60">Complete el formulario para generar una propuesta de sesión.</p>
         )}
       </Card>
     </div>

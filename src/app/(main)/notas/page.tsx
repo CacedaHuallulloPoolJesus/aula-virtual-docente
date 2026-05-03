@@ -107,7 +107,7 @@ export default function NotasPage() {
       return;
     }
     if (!periodId) {
-      alert("No hay periodos académicos configurados.");
+      alert("No hay períodos académicos configurados.");
       return;
     }
     try {
@@ -137,10 +137,10 @@ export default function NotasPage() {
 
   return (
     <section className="space-y-5">
-      <h2 className="text-2xl font-bold text-slate-900">Módulo de notas</h2>
+      <h2 className="text-2xl font-bold text-primary">Evaluación de Notas</h2>
       {role === Role.ADMIN && teachers.length > 0 && (
-        <div className="max-w-md rounded-xl border border-amber-100 bg-amber-50/50 p-3 text-sm text-slate-800">
-          <label className="block font-medium text-slate-700">Docente evaluador</label>
+        <div className="max-w-md rounded-xl border border-accent/35 bg-cream/50 p-3 text-sm text-foreground/90">
+          <label className="block font-medium text-primary/85">Docente evaluador</label>
           <select className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2" value={adminTeacherId} onChange={(e) => setAdminTeacherId(e.target.value)}>
             {teachers.map((t) => (
               <option key={t.id} value={t.id}>

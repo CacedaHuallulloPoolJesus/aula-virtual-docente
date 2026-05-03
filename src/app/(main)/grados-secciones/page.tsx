@@ -52,20 +52,20 @@ export default function GradosSeccionesPage() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-bold text-slate-900">Grados y secciones</h2>
+      <h2 className="text-2xl font-bold text-primary">Grados y Secciones</h2>
       <Card className="overflow-auto">
-        <table className="min-w-full text-left text-sm text-slate-700">
-          <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-800">
+        <table className="min-w-full text-left text-sm text-foreground/90">
+          <thead className="border-b border-secondary/30 bg-secondary text-sm font-semibold text-white">
             <tr>
               <th className="px-3 py-2">Grado y sección</th>
               <th className="px-3 py-2">Docentes asignados</th>
               <th className="px-3 py-2">Estudiantes</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&>tr:nth-child(even)]:bg-primary/[0.03]">
             {groups.map(([group, counts]) => (
-              <tr key={group} className="border-b border-slate-200 hover:bg-slate-50">
-                <td className="px-3 py-2 text-slate-900">{group}</td>
+              <tr key={group} className="border-b border-secondary/10 transition-colors hover:bg-cream/50">
+                <td className="px-3 py-2 text-foreground">{group}</td>
                 <td className="px-3 py-2">{counts.teachers}</td>
                 <td className="px-3 py-2">{counts.students}</td>
               </tr>

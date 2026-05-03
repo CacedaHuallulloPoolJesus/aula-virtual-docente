@@ -168,8 +168,8 @@ export default function SesionesPage() {
 
   return (
     <section className="space-y-5">
-      <h2 className="text-2xl font-bold text-slate-900">Módulo de sesiones de aprendizaje</h2>
-      <Card className="grid gap-3 border-blue-100 md:grid-cols-4">
+      <h2 className="text-2xl font-bold text-primary">Sesiones de Aprendizaje</h2>
+      <Card className="grid gap-3 md:grid-cols-4">
         <label className="text-sm">
           <span className="mb-1 block text-slate-600">Área</span>
           <select className="w-full rounded-lg border border-slate-200 bg-white p-2 text-slate-900" value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
@@ -201,7 +201,7 @@ export default function SesionesPage() {
       </Card>
 
       {showForm && (
-        <Card className="space-y-3 border-blue-100">
+        <Card className="space-y-3">
           {role === Role.ADMIN && (
             <label className="text-sm block max-w-md">
               <span className="mb-1 block font-medium text-slate-600">Docente</span>
@@ -232,12 +232,12 @@ export default function SesionesPage() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {list.map((s) => (
           <Card key={s.id} className="space-y-2 bg-white">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">{s.area}</p>
-            <h3 className="font-semibold text-slate-900">{s.title}</h3>
-            <p className="text-sm text-slate-600">
+            <p className="text-xs font-semibold uppercase tracking-wide text-secondary">{s.area}</p>
+            <h3 className="font-semibold text-primary">{s.title}</h3>
+            <p className="text-sm text-foreground/70">
               {s.grade} — {s.section} | {new Date(s.date).toLocaleDateString("es-PE")} | {s.duration}
             </p>
-            <p className="text-xs text-slate-700">Competencia: {s.competence}</p>
+            <p className="text-xs text-foreground/75">Competencia: {s.competence}</p>
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" className="px-2 py-1 text-xs" onClick={() => alert(`${s.development.slice(0, 400)}...`)}>
                 Ver detalle

@@ -62,7 +62,7 @@ export default function DocentesPage() {
   }, [session?.user?.role, load]);
 
   if (session?.user?.role !== Role.ADMIN) {
-    return <Card className="text-slate-700">Solo el administrador puede gestionar docentes.</Card>;
+    return <Card className="text-foreground/85">Solo el administrador puede gestionar docentes.</Card>;
   }
 
   async function submit(e: React.FormEvent) {
@@ -115,8 +115,8 @@ export default function DocentesPage() {
 
   return (
     <section className="space-y-5">
-      <h2 className="text-2xl font-bold text-slate-900">Gestión de docentes</h2>
-      <Card className="border-blue-100">
+      <h2 className="text-2xl font-bold text-primary">Gestión del Personal Docente</h2>
+      <Card>
         <TeacherForm
           form={form}
           setForm={setForm}
@@ -131,12 +131,12 @@ export default function DocentesPage() {
         />
       </Card>
 
-      <Card className="overflow-auto border-slate-200">
+      <Card className="overflow-auto">
         {loading ? (
-          <p className="p-4 text-sm text-slate-600">Cargando...</p>
+          <p className="p-4 text-sm text-secondary">Cargando personal docente…</p>
         ) : (
           <table className="min-w-full text-left text-sm text-slate-700">
-            <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-800">
+            <thead className="border-b border-secondary/30 bg-secondary text-sm font-semibold text-white">
               <tr>
                 <th className="px-3 py-2">Nombre</th>
                 <th className="px-3 py-2">DNI</th>
@@ -148,9 +148,9 @@ export default function DocentesPage() {
                 <th className="px-3 py-2">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="[&>tr:nth-child(even)]:bg-primary/[0.03]">
               {teachers.map((teacher) => (
-                <tr key={teacher.id} className="border-b border-slate-200 hover:bg-slate-50">
+                <tr key={teacher.id} className="border-b border-secondary/10 transition-colors hover:bg-cream/50">
                   <td className="px-3 py-2 text-slate-900">
                     {teacher.firstName} {teacher.lastName}
                   </td>
@@ -162,7 +162,9 @@ export default function DocentesPage() {
                   <td className="px-3 py-2">
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        teacher.status === TeacherStatus.ACTIVE ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-700"
+                        teacher.status === TeacherStatus.ACTIVE
+                          ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
+                          : "bg-slate-200 text-slate-700 ring-1 ring-slate-300/60"
                       }`}
                     >
                       {teacher.status === TeacherStatus.ACTIVE ? "ACTIVO" : "INACTIVO"}
