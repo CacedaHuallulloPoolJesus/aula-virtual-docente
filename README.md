@@ -55,6 +55,12 @@ Detalle en [docs/usuarios-demo.md](docs/usuarios-demo.md).
 npm install
 npm run dev
 ```
+```bash git
+npm run build
+git add .
+git commit -m "mensaje del cambio"
+git push origin main
+```
 
 Abrir [http://localhost:3000](http://localhost:3000), iniciar sesión y navegar por el panel.
 
