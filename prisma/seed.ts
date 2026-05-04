@@ -27,41 +27,45 @@ async function main() {
     },
   });
 
-  await prisma.user.create({
+  const teacherUser1 = await prisma.user.create({
     data: {
       email: "docente1@aula.com",
       password: demoPassword,
       role: "TEACHER",
-      teacher: {
-        create: {
-          firstName: "Rosa",
-          lastName: "Quispe Huamán",
-          fullName: "Rosa Quispe Huamán",
-          dni: "40123456",
-          status: "ACTIVE",
-          assignedGradeId: grade1.id,
-          assignedSectionId: section1A.id,
-        },
-      },
     },
   });
 
-  await prisma.user.create({
+  await prisma.teacher.create({
+    data: {
+      userId: teacherUser1.id,
+      firstName: "Rosa",
+      lastName: "Quispe Huamán",
+      fullName: "Rosa Quispe Huamán",
+      dni: "40123456",
+      status: "ACTIVE",
+      assignedGradeId: grade1.id,
+      assignedSectionId: section1A.id,
+    },
+  });
+
+  const teacherUser2 = await prisma.user.create({
     data: {
       email: "docente2@aula.com",
       password: demoPassword,
       role: "TEACHER",
-      teacher: {
-        create: {
-          firstName: "Carlos",
-          lastName: "Huanca Salazar",
-          fullName: "Carlos Huanca Salazar",
-          dni: "40234567",
-          status: "ACTIVE",
-          assignedGradeId: grade2.id,
-          assignedSectionId: section2A.id,
-        },
-      },
+    },
+  });
+
+  await prisma.teacher.create({
+    data: {
+      userId: teacherUser2.id,
+      firstName: "Carlos",
+      lastName: "Huanca Salazar",
+      fullName: "Carlos Huanca Salazar",
+      dni: "40234567",
+      status: "ACTIVE",
+      assignedGradeId: grade2.id,
+      assignedSectionId: section2A.id,
     },
   });
 
