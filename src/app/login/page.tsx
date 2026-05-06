@@ -35,7 +35,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     const res = await signIn("credentials", {
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password,
       redirect: false,
     });
@@ -47,6 +47,11 @@ export default function LoginPage() {
       } else {
         setError("Credenciales incorrectas.");
       }
+      return;
+    }
+
+    if (!res?.ok) {
+      setError("No se pudo iniciar sesión. Verifique su conexión o ejecute la carga de datos (seed) si es la primera vez.");
       return;
     }
 

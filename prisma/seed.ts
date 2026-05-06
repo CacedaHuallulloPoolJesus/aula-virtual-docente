@@ -1,11 +1,24 @@
+import { Role, StudentStatus, TeacherStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import { institutionDefaults } from "../src/constants/institution";
 
+/**
+ * Campos alineados con `prisma/schema.prisma`:
+ * Teacher: userId, firstName, lastName, fullName, dni?, status, assignedGradeId?, assignedSectionId?
+ * Student: code, firstName, lastName, fullName, dni?, gradeId, sectionId, status
+ */
 async function main() {
   const adminPassword = await bcrypt.hash("Admin123*", 10);
   const teacherPassword = await bcrypt.hash("123456", 10);
 
+  await prisma.gradeRecord.deleteMany();
+  await prisma.attendance.deleteMany();
+  await prisma.generatedSession.deleteMany();
+  await prisma.learningSession.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.report.deleteMany();
+  await prisma.agentLog.deleteMany();
   await prisma.student.deleteMany();
   await prisma.account.deleteMany();
   await prisma.session.deleteMany();
@@ -24,7 +37,7 @@ async function main() {
     data: {
       email: "admin@virgendelcarmen.edu.pe",
       password: adminPassword,
-      role: "ADMIN",
+      role: Role.ADMIN,
     },
   });
 
@@ -32,7 +45,7 @@ async function main() {
     data: {
       email: "docente1@virgendelcarmen.edu.pe",
       password: teacherPassword,
-      role: "TEACHER",
+      role: Role.TEACHER,
     },
   });
 
@@ -43,7 +56,7 @@ async function main() {
       lastName: "Quispe Huamán",
       fullName: "Rosa Quispe Huamán",
       dni: "40123456",
-      status: "ACTIVE",
+      status: TeacherStatus.ACTIVE,
       assignedGradeId: grade1.id,
       assignedSectionId: section1A.id,
     },
@@ -53,7 +66,7 @@ async function main() {
     data: {
       email: "docente2@virgendelcarmen.edu.pe",
       password: teacherPassword,
-      role: "TEACHER",
+      role: Role.TEACHER,
     },
   });
 
@@ -64,7 +77,7 @@ async function main() {
       lastName: "Huanca Salazar",
       fullName: "Carlos Huanca Salazar",
       dni: "40234567",
-      status: "ACTIVE",
+      status: TeacherStatus.ACTIVE,
       assignedGradeId: grade2.id,
       assignedSectionId: section2A.id,
     },
@@ -79,7 +92,7 @@ async function main() {
       dni: "72345678",
       gradeId: grade1.id,
       sectionId: section1A.id,
-      status: "ACTIVE",
+      status: StudentStatus.ACTIVE,
     },
   });
 
@@ -92,7 +105,7 @@ async function main() {
       dni: "73456789",
       gradeId: grade2.id,
       sectionId: section2A.id,
-      status: "ACTIVE",
+      status: StudentStatus.ACTIVE,
     },
   });
 

@@ -21,10 +21,28 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        const emailNorm = String(credentials.email).trim().toLowerCase();
+
+        /** Si la BD aún tiene correos del seed anterior, aceptar el correo institucional nuevo. */
+        const legacyEmailByInstitutional: Record<string, string> = {
+          "admin@virgendelcarmen.edu.pe": "admin@aula.com",
+          "docente1@virgendelcarmen.edu.pe": "docente1@aula.com",
+          "docente2@virgendelcarmen.edu.pe": "docente2@aula.com",
+        };
+
+        let user = await prisma.user.findUnique({
+          where: { email: emailNorm },
           include: { teacher: true },
         });
+        if (!user) {
+          const legacy = legacyEmailByInstitutional[emailNorm];
+          if (legacy) {
+            user = await prisma.user.findUnique({
+              where: { email: legacy },
+              include: { teacher: true },
+            });
+          }
+        }
 
         if (!user) {
           return null;
