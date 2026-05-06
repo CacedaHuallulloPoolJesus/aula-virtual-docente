@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
+import { institutionDefaults } from "../src/constants/institution";
 
 async function main() {
   const adminPassword = await bcrypt.hash("Admin123*", 10);
-  const demoPassword = await bcrypt.hash("123456", 10);
+  const teacherPassword = await bcrypt.hash("123456", 10);
 
   await prisma.student.deleteMany();
   await prisma.account.deleteMany();
@@ -21,7 +22,7 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      email: "admin@aula.com",
+      email: "admin@virgendelcarmen.edu.pe",
       password: adminPassword,
       role: "ADMIN",
     },
@@ -29,8 +30,8 @@ async function main() {
 
   const teacherUser1 = await prisma.user.create({
     data: {
-      email: "docente1@aula.com",
-      password: demoPassword,
+      email: "docente1@virgendelcarmen.edu.pe",
+      password: teacherPassword,
       role: "TEACHER",
     },
   });
@@ -50,8 +51,8 @@ async function main() {
 
   const teacherUser2 = await prisma.user.create({
     data: {
-      email: "docente2@aula.com",
-      password: demoPassword,
+      email: "docente2@virgendelcarmen.edu.pe",
+      password: teacherPassword,
       role: "TEACHER",
     },
   });
@@ -92,6 +93,29 @@ async function main() {
       gradeId: grade2.id,
       sectionId: section2A.id,
       status: "ACTIVE",
+    },
+  });
+
+  await prisma.systemConfig.upsert({
+    where: { id: "default" },
+    create: {
+      id: "default",
+      institutionName: institutionDefaults.shortName,
+      address: "Huayucachi",
+      district: institutionDefaults.district,
+      province: institutionDefaults.province,
+      region: institutionDefaults.region,
+      academicYear: institutionDefaults.academicYear,
+      directorName: null,
+      logoUrl: institutionDefaults.logoPath,
+    },
+    update: {
+      institutionName: institutionDefaults.shortName,
+      district: institutionDefaults.district,
+      province: institutionDefaults.province,
+      region: institutionDefaults.region,
+      academicYear: institutionDefaults.academicYear,
+      logoUrl: institutionDefaults.logoPath,
     },
   });
 }

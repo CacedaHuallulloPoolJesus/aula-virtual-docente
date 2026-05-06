@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Role } from "@prisma/client";
-import { Button, Card, Input } from "@/components/ui";
+import type { SystemConfig } from "@prisma/client";
+import { Button, Card, ConfirmDialog, Input, Modal, useToast } from "@/components/ui";
 import { SessionForm, type SessionFormState } from "@/components/forms/SessionForm";
 import { apiJson } from "@/lib/api-client";
+import { buildAcademicPdfWithLogo } from "@/lib/pdf-export";
 
 type LearningSessionRow = {
   id: string;
@@ -51,6 +53,7 @@ const defaultSession: SessionFormState = {
 };
 
 export default function SesionesPage() {
+  const { toast } = useToast();
   const { data: session } = useSession();
   const role = session?.user?.role;
   const [sessions, setSessions] = useState<LearningSessionRow[]>([]);
@@ -62,6 +65,9 @@ export default function SesionesPage() {
   const [areaFilter, setAreaFilter] = useState("ALL");
   const [gradeFilter, setGradeFilter] = useState("ALL");
   const [dateFilter, setDateFilter] = useState("");
+  const [viewSession, setViewSession] = useState<LearningSessionRow | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const load = useCallback(async () => {
     const list = await apiJson<LearningSessionRow[]>("/api/sessions");
@@ -92,7 +98,7 @@ export default function SesionesPage() {
     e.preventDefault();
     const teacherId = role === Role.ADMIN ? adminTeacherId : session?.user?.teacherId;
     if (!teacherId) {
-      alert(role === Role.ADMIN ? "Seleccione docente." : "Solo docentes pueden crear sesiones manuales.");
+      toast(role === Role.ADMIN ? "Seleccione docente." : "Solo docentes pueden crear sesiones manuales.", "warning");
       return;
     }
     const grade = role === Role.TEACHER ? session?.user?.assignedGradeName ?? form.grade : form.grade;
@@ -120,15 +126,17 @@ export default function SesionesPage() {
     try {
       if (editingId) {
         await apiJson(`/api/sessions/${editingId}`, { method: "PATCH", body: JSON.stringify(body) });
+        toast("Sesión actualizada.", "success");
       } else {
         await apiJson("/api/sessions", { method: "POST", body: JSON.stringify(body) });
+        toast("Sesión creada.", "success");
       }
       setForm(defaultSession);
       setShowForm(false);
       setEditingId(null);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al guardar");
+      toast(err instanceof Error ? err.message : "Error al guardar", "error");
     }
   }
 
@@ -154,15 +162,58 @@ export default function SesionesPage() {
     });
     setShowForm(true);
     if (role === Role.ADMIN) setAdminTeacherId(s.teacherId);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function remove(id: string) {
-    if (!confirm("¿Eliminar sesión?")) return;
+  async function confirmDelete() {
+    if (!deleteId) return;
+    setDeleteLoading(true);
     try {
-      await fetch(`/api/sessions/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/sessions/${deleteId}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) {
+        toast(await res.text(), "error");
+        return;
+      }
+      toast("Sesión eliminada.", "success");
+      setDeleteId(null);
       await load();
     } catch {
-      alert("No se pudo eliminar");
+      toast("No se pudo eliminar la sesión.", "error");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  async function exportSessionPdf(s: LearningSessionRow) {
+    try {
+      const config = await apiJson<SystemConfig | null>("/api/system-config").catch(() => null);
+      const doc = await buildAcademicPdfWithLogo({
+        config,
+        title: s.generatedByIa ? "Sesión de aprendizaje (IA)" : "Sesión de aprendizaje",
+        subtitle: `${s.title} · ${s.area} · ${s.grade} ${s.section} · ${new Date(s.date).toLocaleDateString("es-PE")}`,
+        teacherName: session?.user?.name ?? session?.user?.email ?? "",
+        gradeSection: `${s.grade} — ${s.section}`,
+        columns: [
+          { header: "Sección", dataKey: "k" },
+          { header: "Contenido", dataKey: "v" },
+        ],
+        rows: [
+          { k: "Competencia", v: s.competence },
+          { k: "Capacidad", v: s.capacity },
+          { k: "Desempeño", v: s.performance },
+          { k: "Propósito", v: s.learningPurpose },
+          { k: "Evidencia", v: s.learningEvidence },
+          { k: "Inicio", v: s.startActivity },
+          { k: "Desarrollo", v: s.development },
+          { k: "Cierre", v: s.closure },
+          { k: "Recursos", v: s.resources },
+          { k: "Evaluación", v: s.evaluation },
+        ],
+      });
+      doc.save(`sesion-${s.id.slice(0, 8)}.pdf`);
+      toast("PDF generado correctamente.", "success");
+    } catch {
+      toast("No se pudo exportar el PDF.", "error");
     }
   }
 
@@ -172,10 +223,14 @@ export default function SesionesPage() {
       <Card className="grid gap-3 md:grid-cols-4">
         <label className="text-sm">
           <span className="mb-1 block text-slate-600">Área</span>
-          <select className="w-full rounded-lg border border-slate-200 bg-white p-2 text-slate-900" value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
+          <select
+            className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2 text-slate-900"
+            value={areaFilter}
+            onChange={(e) => setAreaFilter(e.target.value)}
+          >
             <option value="ALL">Todas</option>
             {[...new Set(sessions.map((s) => s.area))].map((a) => (
-              <option key={a}>
+              <option key={a} value={a}>
                 {a}
               </option>
             ))}
@@ -183,10 +238,14 @@ export default function SesionesPage() {
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-slate-600">Grado</span>
-          <select className="w-full rounded-lg border border-slate-200 bg-white p-2 text-slate-900" value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)}>
+          <select
+            className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2 text-slate-900"
+            value={gradeFilter}
+            onChange={(e) => setGradeFilter(e.target.value)}
+          >
             <option value="ALL">Todos</option>
             {[...new Set(sessions.map((s) => s.grade))].map((g) => (
-              <option key={g}>
+              <option key={g} value={g}>
                 {g}
               </option>
             ))}
@@ -194,18 +253,32 @@ export default function SesionesPage() {
         </label>
         <Input label="Fecha" type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
         <div className="flex flex-col justify-end gap-2">
-          <Button onClick={() => { setShowForm((prev) => !prev); if (showForm) { setEditingId(null); setForm(defaultSession); } }}>
+          <Button
+            type="button"
+            className="cursor-pointer"
+            onClick={() => {
+              setShowForm((prev) => !prev);
+              if (showForm) {
+                setEditingId(null);
+                setForm(defaultSession);
+              }
+            }}
+          >
             {showForm ? "Cerrar" : "Nueva sesión"}
           </Button>
         </div>
       </Card>
 
       {showForm && (
-        <Card className="space-y-3">
+        <Card id="sesion-formulario" className="space-y-3 scroll-mt-24">
           {role === Role.ADMIN && (
-            <label className="text-sm block max-w-md">
+            <label className="block max-w-md text-sm">
               <span className="mb-1 block font-medium text-slate-600">Docente</span>
-              <select className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900" value={adminTeacherId} onChange={(e) => setAdminTeacherId(e.target.value)}>
+              <select
+                className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+                value={adminTeacherId}
+                onChange={(e) => setAdminTeacherId(e.target.value)}
+              >
                 {teachers.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.firstName} {t.lastName}
@@ -239,19 +312,73 @@ export default function SesionesPage() {
             </p>
             <p className="text-xs text-foreground/75">Competencia: {s.competence}</p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" className="px-2 py-1 text-xs" onClick={() => alert(`${s.development.slice(0, 400)}...`)}>
-                Ver detalle
+              <Button variant="secondary" className="cursor-pointer px-2 py-1 text-xs" type="button" onClick={() => setViewSession(s)}>
+                Ver
               </Button>
-              <Button variant="secondary" className="px-2 py-1 text-xs" onClick={() => startEdit(s)}>
+              <Button variant="secondary" className="cursor-pointer px-2 py-1 text-xs" type="button" onClick={() => void exportSessionPdf(s)}>
+                Exportar PDF
+              </Button>
+              <Button variant="secondary" className="cursor-pointer px-2 py-1 text-xs" type="button" onClick={() => startEdit(s)}>
                 Editar
               </Button>
-              <Button variant="danger" className="px-2 py-1 text-xs" onClick={() => void remove(s.id)}>
+              <Button variant="danger" className="cursor-pointer px-2 py-1 text-xs" type="button" onClick={() => setDeleteId(s.id)}>
                 Eliminar
               </Button>
             </div>
           </Card>
         ))}
       </div>
+
+      <Modal open={viewSession !== null} title={viewSession?.title ?? "Detalle"} onClose={() => setViewSession(null)} className="max-w-lg">
+        {viewSession ? (
+          <div className="space-y-2 text-sm text-foreground/90">
+            <p>
+              <strong>Área:</strong> {viewSession.area}
+            </p>
+            <p>
+              <strong>Grado / Sección:</strong> {viewSession.grade} — {viewSession.section}
+            </p>
+            <p>
+              <strong>Fecha:</strong> {new Date(viewSession.date).toLocaleDateString("es-PE")}
+            </p>
+            <p>
+              <strong>Competencia:</strong> {viewSession.competence}
+            </p>
+            <p>
+              <strong>Propósito:</strong> {viewSession.learningPurpose}
+            </p>
+            <p>
+              <strong>Inicio:</strong> {viewSession.startActivity}
+            </p>
+            <p>
+              <strong>Desarrollo:</strong> {viewSession.development}
+            </p>
+            <p>
+              <strong>Cierre:</strong> {viewSession.closure}
+            </p>
+            <p>
+              <strong>Recursos:</strong> {viewSession.resources}
+            </p>
+            <p>
+              <strong>Evaluación:</strong> {viewSession.evaluation}
+            </p>
+            <Button type="button" variant="secondary" className="cursor-pointer mt-2" onClick={() => void exportSessionPdf(viewSession)}>
+              Exportar esta sesión (PDF)
+            </Button>
+          </div>
+        ) : null}
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Eliminar sesión"
+        description="Se eliminará permanentemente esta sesión de aprendizaje."
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deleteLoading}
+        onCancel={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+      />
     </section>
   );
 }

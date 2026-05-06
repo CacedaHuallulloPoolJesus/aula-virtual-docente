@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button, Card, Input } from "@/components/ui";
+import { institutionDefaults } from "@/constants/institution";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [logoSrc, setLogoSrc] = useState("/insignia.png");
+  const [logoOk, setLogoOk] = useState(true);
   const router = useRouter();
   const { status } = useSession();
   const isDisabled = loading || !email.trim() || !password.trim();
@@ -41,7 +42,11 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.error) {
-      setError("Credenciales incorrectas o usuario inactivo.");
+      if (res.error === "AccountInactive") {
+        setError("Cuenta inactiva, comuníquese con el administrador.");
+      } else {
+        setError("Credenciales incorrectas.");
+      }
       return;
     }
 
@@ -55,30 +60,29 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md rounded-3xl border border-accent/45 bg-white/98 p-8 shadow-2xl shadow-primary/25 backdrop-blur-md transition-all duration-300">
         <div className="mb-6 space-y-3 text-center">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border-2 border-accent/70 bg-cream shadow-md">
-            {logoSrc ? (
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border-2 border-accent/70 bg-cream shadow-md ring-2 ring-secondary/20">
+            {logoOk ? (
               <Image
-                src={logoSrc}
-                alt="Insignia Institución Educativa Virgen del Carmen"
+                src={institutionDefaults.logoPath}
+                alt="Insignia institucional"
                 width={78}
                 height={78}
                 className="rounded-full object-cover"
-                onError={() => {
-                  setLogoSrc("");
-                }}
+                onError={() => setLogoOk(false)}
               />
             ) : (
               <span className="text-xl font-bold text-primary">VC</span>
             )}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Sistema Integral de Aula Virtual Docente</h1>
-          <p className="text-sm text-secondary">Institución Educativa Virgen del Carmen — Huayucachi</p>
+          <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Aula Virtual Docente</h1>
+          <p className="text-sm font-medium text-secondary">{institutionDefaults.fullLegalName}</p>
+          <p className="text-xs uppercase tracking-wide text-foreground/55">Sistema Integral</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-5">
           <Input
             label="Correo institucional"
             type="email"
-            placeholder="Ingrese su correo institucional"
+            placeholder="correo@institución.edu.pe"
             icon={<Mail size={18} />}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -87,7 +91,7 @@ export default function LoginPage() {
           <Input
             label="Contraseña"
             type={showPassword ? "text" : "password"}
-            placeholder="Ingrese su contraseña"
+            placeholder="Contraseña"
             icon={<Lock size={18} />}
             rightElement={
               <button
@@ -104,17 +108,6 @@ export default function LoginPage() {
             required
           />
           {error && <p className="rounded-lg border border-danger/35 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{error}</p>}
-          <div className="space-y-1 rounded-xl border border-secondary/25 bg-cream/50 p-3 text-xs text-foreground/85">
-            <p className="font-semibold text-primary">Cuentas de demostración</p>
-            <p className="text-secondary">Tras la carga inicial de datos con <code className="rounded bg-white/90 px-1">npx prisma db seed</code>:</p>
-            <p>Administrador (demostración): admin@aula.com — contraseña 123456</p>
-            <p>Administrador institucional: admin@virgendelcarmen.edu.pe — contraseña Admin123*</p>
-            <p>Docente 1: docente1@aula.com — contraseña 123456</p>
-            <p>Docente 2: docente2@aula.com — contraseña 123456</p>
-            <p className="pt-1 text-secondary">
-              Si no puede acceder, verifique la variable <code className="rounded bg-white/80 px-1">DATABASE_URL</code> y ejecute nuevamente la carga de datos indicada.
-            </p>
-          </div>
           <Button
             type="submit"
             variant="primary"

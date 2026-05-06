@@ -13,7 +13,11 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const hashed = await bcrypt.hash(String(body.password ?? "123456"), 10);
+  const rawPassword = String(body.password ?? "").trim();
+  if (rawPassword.length < 6) {
+    return NextResponse.json({ message: "La contraseña es obligatoria (mínimo 6 caracteres)." }, { status: 400 });
+  }
+  const hashed = await bcrypt.hash(rawPassword, 10);
   const fullName = String(body.fullName ?? body.email ?? "Docente").trim();
   const parts = fullName.split(/\s+/);
   const firstName = String(body.firstName ?? parts[0] ?? "Docente").trim();

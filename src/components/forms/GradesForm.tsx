@@ -16,6 +16,8 @@ type Props = {
   onClearDraft: () => void;
   onExportPdf?: () => void;
   onExportExcel?: () => void;
+  onViewDetail?: (studentId: string) => void;
+  onRecalculate?: () => void;
 };
 
 export function GradesForm({
@@ -30,6 +32,8 @@ export function GradesForm({
   onClearDraft,
   onExportPdf,
   onExportExcel,
+  onViewDetail,
+  onRecalculate,
 }: Props) {
   return (
     <>
@@ -76,6 +80,7 @@ export function GradesForm({
               <th className="px-3 py-2">Promedio</th>
               <th className="px-3 py-2">Nivel</th>
               <th className="px-3 py-2">Riesgo</th>
+              {onViewDetail ? <th className="px-3 py-2">Acciones</th> : null}
             </tr>
           </thead>
           <tbody className="[&>tr:nth-child(even)]:bg-primary/[0.03]">
@@ -125,24 +130,36 @@ export function GradesForm({
                     </span>
                   )}
                 </td>
+                {onViewDetail ? (
+                  <td className="px-3 py-2">
+                    <Button type="button" variant="secondary" className="cursor-pointer px-2 py-1 text-xs" onClick={() => onViewDetail(row.student.id)}>
+                      Ver detalle
+                    </Button>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
         </table>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="primary" onClick={onSave}>
+          <Button variant="primary" className="cursor-pointer" type="button" onClick={onSave}>
             Guardar notas
           </Button>
-          <Button variant="secondary" onClick={onClearDraft}>
+          {onRecalculate ? (
+            <Button variant="secondary" className="cursor-pointer" type="button" onClick={onRecalculate}>
+              Calcular promedio
+            </Button>
+          ) : null}
+          <Button variant="secondary" className="cursor-pointer" type="button" onClick={onClearDraft}>
             Limpiar borrador
           </Button>
           {onExportPdf ? (
-            <Button variant="secondary" onClick={onExportPdf}>
+            <Button variant="secondary" className="cursor-pointer" type="button" onClick={onExportPdf}>
               Exportar PDF
             </Button>
           ) : null}
           {onExportExcel ? (
-            <Button variant="secondary" onClick={onExportExcel}>
+            <Button variant="secondary" className="cursor-pointer" type="button" onClick={onExportExcel}>
               Exportar Excel
             </Button>
           ) : null}

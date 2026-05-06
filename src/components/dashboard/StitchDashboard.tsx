@@ -1,6 +1,9 @@
 "use client";
 
 import type { ComponentType } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   AlertTriangle,
   Bell,
@@ -43,7 +46,17 @@ function AttendanceBadge({ value }: { value: string }) {
   );
 }
 
+const NAV: { href: string; label: string }[] = [
+  { href: "/dashboard", label: "Panel Académico Docente" },
+  { href: "/estudiantes", label: "Gestión de Estudiantes" },
+  { href: "/asistencia", label: "Registro de Asistencia" },
+  { href: "/notas", label: "Evaluación de Notas" },
+  { href: "/sesiones", label: "Sesiones de Aprendizaje" },
+];
+
 export default function StitchDashboard() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-white/10 bg-primary py-6 text-white shadow-lg shadow-primary/30">
@@ -59,36 +72,33 @@ export default function StitchDashboard() {
         </div>
 
         <nav className="flex-1 space-y-1 px-2">
-          {(
-            [
-              [LayoutDashboard, "Panel Académico Docente", true],
-              [Users, "Gestión de Estudiantes", false],
-              [ClipboardCheck, "Registro de Asistencia", false],
-              [ClipboardList, "Evaluación de Notas", false],
-              [BookOpen, "Sesiones de Aprendizaje", false],
-            ] as [ComponentType<{ size?: number }>, string, boolean][]
-          ).map(([Icon, label, active]) => (
-            <a
-              key={label}
-              href="#"
-              className={
-                active
-                  ? "flex items-center gap-3 rounded-lg border border-white/10 bg-secondary px-4 py-3 text-sm font-semibold text-white shadow-md ring-1 ring-accent/30"
-                  : "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold text-white/85 transition-all hover:bg-secondary/80 hover:pl-5"
-              }
-            >
-              <span className={active ? "text-accent" : "text-white/80"}>
-                <Icon size={19} />
-              </span>
-              {label}
-            </a>
-          ))}
+          {NAV.map((item, i) => {
+            const icons = [LayoutDashboard, Users, ClipboardCheck, ClipboardList, BookOpen];
+            const Icon = icons[i] ?? LayoutDashboard;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={
+                  item.href === "/dashboard"
+                    ? "flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-secondary px-4 py-3 text-sm font-semibold text-white shadow-md ring-1 ring-accent/30"
+                    : "flex cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold text-white/85 transition-all hover:bg-secondary/80 hover:pl-5"
+                }
+              >
+                <span className={item.href === "/dashboard" ? "text-accent" : "text-white/80"}>
+                  <Icon size={19} />
+                </span>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-auto border-t border-white/10 px-6 pt-6">
           <button
             type="button"
-            className="flex items-center gap-3 py-3 text-sm font-semibold text-white/85 transition-colors hover:text-accent"
+            className="flex cursor-pointer items-center gap-3 py-3 text-sm font-semibold text-white/85 transition-colors hover:text-accent"
+            onClick={() => void signOut({ callbackUrl: "/login" })}
           >
             <LogOut size={19} />
             Cerrar sesión
@@ -104,15 +114,19 @@ export default function StitchDashboard() {
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 text-secondary">
-            <button type="button" className="rounded-full p-2 transition-colors hover:bg-cream/60" aria-label="Notificaciones">
+            <Link
+              href="/reportes"
+              className="rounded-full p-2 transition-colors hover:bg-cream/60"
+              aria-label="Notificaciones y reportes"
+            >
               <Bell size={20} />
-            </button>
-            <button type="button" className="rounded-full p-2 transition-colors hover:bg-cream/60" aria-label="Ayuda">
+            </Link>
+            <Link href="/agentes-ia" className="rounded-full p-2 transition-colors hover:bg-cream/60" aria-label="Ayuda e IA">
               <CircleHelp size={20} />
-            </button>
-            <button type="button" className="rounded-full p-2 transition-colors hover:bg-cream/60" aria-label="Configuración">
+            </Link>
+            <Link href="/configuracion" className="rounded-full p-2 transition-colors hover:bg-cream/60" aria-label="Configuración">
               <Settings size={20} />
-            </button>
+            </Link>
           </div>
           <div className="flex items-center gap-3 border-l border-secondary/15 pl-6">
             <div className="text-right">
@@ -136,19 +150,22 @@ export default function StitchDashboard() {
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98]"
+                className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98]"
+                onClick={() => router.push("/asistencia")}
               >
                 <CalendarDays size={18} /> Registrar asistencia
               </button>
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-xl border-2 border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm transition hover:bg-cream/50 active:scale-[0.98]"
+                className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm transition hover:bg-cream/50 active:scale-[0.98]"
+                onClick={() => router.push("/notas")}
               >
                 <FileUp size={18} /> Registrar notas
               </button>
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-primary shadow-lg shadow-accent/20 ring-1 ring-primary/10 transition hover:brightness-95 active:scale-[0.98]"
+                className="flex cursor-pointer items-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-primary shadow-lg shadow-accent/20 ring-1 ring-primary/10 transition hover:brightness-95 active:scale-[0.98]"
+                onClick={() => router.push("/ia-sesiones")}
               >
                 <Sparkles size={18} /> Nueva sesión con inteligencia artificial
               </button>
@@ -244,8 +261,9 @@ export default function StitchDashboard() {
                 </div>
                 <button
                   type="button"
-                  className="rounded-xl border border-secondary/20 p-2 text-secondary transition hover:bg-cream/60"
+                  className="cursor-pointer rounded-xl border border-secondary/20 p-2 text-secondary transition hover:bg-cream/60"
                   aria-label="Filtrar listado"
+                  onClick={() => router.push("/estudiantes")}
                 >
                   <Filter size={20} />
                 </button>
@@ -289,13 +307,18 @@ export default function StitchDashboard() {
                       <span className="font-bold text-primary">{s.avg}</span>
                     </td>
                     <td className="space-x-2 px-6 py-4 text-right">
-                      <button type="button" className="text-xs font-bold uppercase text-secondary hover:text-primary hover:underline">
+                      <button
+                        type="button"
+                        className="cursor-pointer text-xs font-bold uppercase text-secondary hover:text-primary hover:underline"
+                        onClick={() => router.push("/estudiantes")}
+                      >
                         Ver ficha
                       </button>
                       <button
                         type="button"
-                        className="text-foreground/40 transition-colors hover:text-secondary"
+                        className="cursor-pointer text-foreground/40 transition-colors hover:text-secondary"
                         aria-label="Editar registro"
+                        onClick={() => router.push("/estudiantes")}
                       >
                         <Edit size={17} />
                       </button>
@@ -312,7 +335,8 @@ export default function StitchDashboard() {
                   <button
                     key={n}
                     type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-secondary/20 bg-white text-primary transition hover:bg-secondary hover:text-white"
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-secondary/20 bg-white text-primary transition hover:bg-secondary hover:text-white"
+                    onClick={() => router.push("/estudiantes")}
                   >
                     {n}
                   </button>

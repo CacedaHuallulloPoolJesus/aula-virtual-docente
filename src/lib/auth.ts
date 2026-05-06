@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { Role } from "@prisma/client";
+import { Role, TeacherStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { type AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -33,6 +33,10 @@ export const authOptions: AuthOptions = {
         const validPassword = await bcrypt.compare(credentials.password, user.password);
         if (!validPassword) {
           return null;
+        }
+
+        if (user.role === Role.TEACHER && user.teacher?.status === TeacherStatus.INACTIVE) {
+          throw new Error("AccountInactive");
         }
 
         const displayName = user.teacher

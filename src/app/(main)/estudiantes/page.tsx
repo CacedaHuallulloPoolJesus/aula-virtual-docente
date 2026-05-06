@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Role, StudentStatus } from "@prisma/client";
-import { Button, Card, Input } from "@/components/ui";
+import { AttendanceStatus, Role, StudentStatus } from "@prisma/client";
+import { Button, Card, ConfirmDialog, Input, useToast } from "@/components/ui";
 import { StudentForm, type StudentFormState } from "@/components/forms/StudentForm";
+import { StudentProfileModal, type ProfileStudent } from "@/components/students/StudentProfileModal";
 import { apiJson } from "@/lib/api-client";
 
 type ApiStudent = {
@@ -27,6 +28,22 @@ type ApiStudent = {
 type CatalogGrade = { id: string; name: string };
 type CatalogSection = { id: string; name: string; gradeId: string };
 
+type ApiAttendanceRecord = {
+  studentId: string;
+  date: string;
+  status: AttendanceStatus;
+  justification: string | null;
+};
+
+type ApiGradeRecord = {
+  studentId: string;
+  area: string;
+  note1: number;
+  note2: number;
+  note3: number;
+  course: { period: { name: string } };
+};
+
 const emptyForm: StudentFormState = {
   code: "",
   firstName: "",
@@ -39,11 +56,11 @@ const emptyForm: StudentFormState = {
   status: StudentStatus.ACTIVE,
 };
 
-async function downloadFile(path: string, filename: string) {
+async function downloadFile(path: string, filename: string): Promise<{ ok: boolean; message: string }> {
   const res = await fetch(path, { credentials: "include" });
   if (!res.ok) {
-    alert(await res.text());
-    return;
+    const text = await res.text();
+    return { ok: false, message: text || "Error al descargar el archivo" };
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -52,9 +69,11 @@ async function downloadFile(path: string, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+  return { ok: true, message: "Descarga completada" };
 }
 
 export default function EstudiantesPage() {
+  const { toast } = useToast();
   const { data: session } = useSession();
   const role = session?.user?.role;
   const [students, setStudents] = useState<ApiStudent[]>([]);
@@ -71,6 +90,15 @@ export default function EstudiantesPage() {
   const [form, setForm] = useState(emptyForm);
   const [gradeId, setGradeId] = useState("");
   const [sectionId, setSectionId] = useState("");
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileStudent, setProfileStudent] = useState<ProfileStudent | null>(null);
+  const [profileAtt, setProfileAtt] = useState<{ date: string; status: AttendanceStatus; justification: string | null }[]>([]);
+  const [profileGrades, setProfileGrades] = useState<{ area: string; note1: number; note2: number; note3: number; period: string }[]>([]);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -121,7 +149,7 @@ export default function EstudiantesPage() {
     const gId = role === Role.TEACHER ? session?.user?.assignedGradeId : gradeId;
     const sId = role === Role.TEACHER ? session?.user?.assignedSectionId : sectionId;
     if (!gId || !sId) {
-      alert(role === Role.TEACHER ? "Su usuario no tiene grado y sección asignados en el sistema." : "Seleccione grado y sección.");
+      toast(role === Role.TEACHER ? "Su usuario no tiene grado y sección asignados en el sistema." : "Seleccione grado y sección.", "warning");
       return;
     }
     const payload = {
@@ -133,13 +161,15 @@ export default function EstudiantesPage() {
     try {
       if (editingId) {
         await apiJson(`/api/students/${editingId}`, { method: "PATCH", body: JSON.stringify(payload) });
+        toast("Estudiante actualizado correctamente.", "success");
       } else {
         await apiJson("/api/students", { method: "POST", body: JSON.stringify(payload) });
+        toast("Estudiante registrado correctamente.", "success");
       }
       await load();
       resetForm();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al guardar");
+      toast(err instanceof Error ? err.message : "Error al guardar", "error");
     }
   }
 
@@ -163,6 +193,52 @@ export default function EstudiantesPage() {
     setShowForm(true);
   }
 
+  async function openProfile(student: ApiStudent) {
+    setProfileStudent({
+      id: student.id,
+      code: student.code,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      dni: student.dni,
+      birthDate: student.birthDate,
+      guardian: student.guardian,
+      guardianPhone: student.guardianPhone,
+      address: student.address,
+      status: student.status,
+      grade: student.grade,
+      section: student.section,
+    });
+    setProfileOpen(true);
+    setProfileLoading(true);
+    setProfileAtt([]);
+    setProfileGrades([]);
+    try {
+      const [attList, gradeList] = await Promise.all([
+        apiJson<ApiAttendanceRecord[]>("/api/attendance"),
+        apiJson<ApiGradeRecord[]>("/api/grades"),
+      ]);
+      const att = attList
+        .filter((a) => a.studentId === student.id)
+        .map((a) => ({ date: a.date, status: a.status, justification: a.justification }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const gr = gradeList
+        .filter((g) => g.studentId === student.id)
+        .map((g) => ({
+          area: g.area,
+          note1: g.note1,
+          note2: g.note2,
+          note3: g.note3,
+          period: g.course.period.name,
+        }));
+      setProfileAtt(att);
+      setProfileGrades(gr);
+    } catch {
+      toast("No se pudo cargar el resumen de asistencia y notas.", "warning");
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
   function badge(st: StudentStatus) {
     if (st === StudentStatus.ACTIVE) return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80";
     if (st === StudentStatus.TRANSFERRED) return "bg-accent/30 text-primary ring-1 ring-accent/45";
@@ -177,14 +253,33 @@ export default function EstudiantesPage() {
     return "INACTIVO";
   }
 
-  async function removeStudent(id: string) {
-    if (!confirm("¿Eliminar estudiante?")) return;
+  async function confirmDelete() {
+    if (!deleteId) return;
+    setDeleteLoading(true);
     try {
-      await fetch(`/api/students/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/students/${deleteId}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) {
+        toast(await res.text(), "error");
+        return;
+      }
+      toast("Estudiante eliminado.", "success");
+      setDeleteId(null);
       await load();
     } catch {
-      alert("No se pudo eliminar");
+      toast("No se pudo eliminar el estudiante.", "error");
+    } finally {
+      setDeleteLoading(false);
     }
+  }
+
+  async function handleExportPdf() {
+    const r = await downloadFile("/api/export/students/pdf", "estudiantes.pdf");
+    toast(r.message, r.ok ? "success" : "error");
+  }
+
+  async function handleExportExcel() {
+    const r = await downloadFile("/api/export/students/xlsx", "estudiantes.xlsx");
+    toast(r.message, r.ok ? "success" : "error");
   }
 
   return (
@@ -192,10 +287,10 @@ export default function EstudiantesPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-2xl font-bold text-primary">Gestión de Estudiantes</h2>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" className="text-xs" onClick={() => downloadFile("/api/export/students/pdf", "estudiantes.pdf")}>
+          <Button variant="secondary" className="cursor-pointer text-xs" onClick={() => void handleExportPdf()}>
             Exportar PDF
           </Button>
-          <Button variant="secondary" className="text-xs" onClick={() => downloadFile("/api/export/students/xlsx", "estudiantes.xlsx")}>
+          <Button variant="secondary" className="cursor-pointer text-xs" onClick={() => void handleExportExcel()}>
             Exportar Excel
           </Button>
         </div>
@@ -211,7 +306,11 @@ export default function EstudiantesPage() {
           />
           <label className="text-sm">
             <span className="mb-1 block font-medium text-slate-600">Grado</span>
-            <select className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900" value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)}>
+            <select
+              className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+              value={gradeFilter}
+              onChange={(e) => setGradeFilter(e.target.value)}
+            >
               <option value="ALL">Todos</option>
               {[...new Set(students.map((s) => s.grade.name))].map((grade) => (
                 <option key={grade}>{grade}</option>
@@ -220,7 +319,11 @@ export default function EstudiantesPage() {
           </label>
           <label className="text-sm">
             <span className="mb-1 block font-medium text-slate-600">Sección</span>
-            <select className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900" value={sectionFilter} onChange={(e) => setSectionFilter(e.target.value)}>
+            <select
+              className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+            >
               <option value="ALL">Todas</option>
               {[...new Set(students.map((s) => s.section.name))].map((section) => (
                 <option key={section}>{section}</option>
@@ -229,7 +332,11 @@ export default function EstudiantesPage() {
           </label>
           <label className="text-sm">
             <span className="mb-1 block font-medium text-slate-600">Estado</span>
-            <select className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <select
+              className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
               <option value="ALL">Todos</option>
               <option value={StudentStatus.ACTIVE}>Activo</option>
               <option value={StudentStatus.TRANSFERRED}>Traslado</option>
@@ -238,7 +345,7 @@ export default function EstudiantesPage() {
             </select>
           </label>
         </div>
-        <Button variant="primary" onClick={() => setShowForm((prev) => !prev)}>
+        <Button variant="primary" className="cursor-pointer" onClick={() => setShowForm((prev) => !prev)}>
           {showForm ? "Cerrar formulario" : "Nuevo estudiante"}
         </Button>
       </Card>
@@ -254,7 +361,14 @@ export default function EstudiantesPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <label className="text-sm">
                 <span className="mb-1 block font-medium text-slate-600">Grado</span>
-                <select className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900" value={gradeId} onChange={(e) => { setGradeId(e.target.value); setSectionId(""); }}>
+                <select
+                  className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+                  value={gradeId}
+                  onChange={(e) => {
+                    setGradeId(e.target.value);
+                    setSectionId("");
+                  }}
+                >
                   <option value="">Seleccione</option>
                   {grades.map((g) => (
                     <option key={g.id} value={g.id}>
@@ -265,7 +379,12 @@ export default function EstudiantesPage() {
               </label>
               <label className="text-sm">
                 <span className="mb-1 block font-medium text-slate-600">Sección</span>
-                <select className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!gradeId}>
+                <select
+                  className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900"
+                  value={sectionId}
+                  onChange={(e) => setSectionId(e.target.value)}
+                  disabled={!gradeId}
+                >
                   <option value="">Seleccione</option>
                   {sectionOptions.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -311,20 +430,14 @@ export default function EstudiantesPage() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="secondary"
-                        className="px-2 py-1 text-xs"
-                        onClick={() =>
-                          alert(`${student.firstName} ${student.lastName}\nDNI: ${student.dni ?? "—"}\nApoderado: ${student.guardian ?? "—"}`)
-                        }
-                      >
-                        Ver
+                      <Button variant="secondary" className="cursor-pointer px-2 py-1 text-xs" onClick={() => void openProfile(student)}>
+                        Ver ficha
                       </Button>
-                      <Button variant="secondary" className="px-2 py-1 text-xs" onClick={() => editStudent(student.id)}>
+                      <Button variant="secondary" className="cursor-pointer px-2 py-1 text-xs" onClick={() => editStudent(student.id)}>
                         Editar
                       </Button>
                       {role === Role.ADMIN && (
-                        <Button variant="danger" className="px-2 py-1 text-xs" onClick={() => void removeStudent(student.id)}>
+                        <Button variant="danger" className="cursor-pointer px-2 py-1 text-xs" onClick={() => setDeleteId(student.id)}>
                           Eliminar
                         </Button>
                       )}
@@ -336,6 +449,30 @@ export default function EstudiantesPage() {
           </table>
         )}
       </Card>
+
+      <StudentProfileModal
+        open={profileOpen}
+        student={profileStudent}
+        attendance={profileAtt}
+        grades={profileGrades}
+        loading={profileLoading}
+        onClose={() => {
+          setProfileOpen(false);
+          setProfileStudent(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Eliminar estudiante"
+        description="Esta acción eliminará el registro del estudiante. ¿Desea continuar?"
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={deleteLoading}
+        onCancel={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+      />
     </section>
   );
 }

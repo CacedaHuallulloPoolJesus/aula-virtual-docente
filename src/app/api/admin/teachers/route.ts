@@ -24,16 +24,26 @@ export async function POST(req: Request) {
   if ("error" in auth) return auth.error;
 
   const body = await req.json();
-  const password = await bcrypt.hash(String(body.password ?? "123456"), 10);
+  const rawPassword = String(body.password ?? "").trim();
+  if (rawPassword.length < 6) {
+    return NextResponse.json({ message: "La contraseña es obligatoria (mínimo 6 caracteres)." }, { status: 400 });
+  }
+  const password = await bcrypt.hash(rawPassword, 10);
   const firstName = String(body.firstName ?? "").trim();
   const lastName = String(body.lastName ?? "").trim();
   const fullName = `${firstName} ${lastName}`.trim() || String(body.fullName ?? "").trim();
 
   const role = body.role === "ADMIN" || body.role === Role.ADMIN ? Role.ADMIN : Role.TEACHER;
 
+  const emailNorm = String(body.email).toLowerCase().trim();
+  const exists = await prisma.user.findUnique({ where: { email: emailNorm } });
+  if (exists) {
+    return NextResponse.json({ message: "Ya existe un usuario con ese correo institucional." }, { status: 409 });
+  }
+
   const user = await prisma.user.create({
     data: {
-      email: String(body.email).toLowerCase().trim(),
+      email: emailNorm,
       password,
       role,
       teacher:

@@ -28,19 +28,19 @@ type Props = {
 };
 
 const teacherStatusLabel: Record<TeacherStatus, string> = {
-  [TeacherStatus.ACTIVE]: "Activo",
-  [TeacherStatus.INACTIVE]: "Inactivo",
+  [TeacherStatus.ACTIVE]: "ACTIVO",
+  [TeacherStatus.INACTIVE]: "INACTIVO",
 };
 
 export function TeacherForm({ form, setForm, grades, sections, editingId, onSubmit, onClear }: Props) {
   const sectionOptions = sections.filter((s) => s.gradeId === form.assignedGradeId);
 
   return (
-    <form className="grid gap-3 md:grid-cols-3" onSubmit={onSubmit}>
+    <form id="formulario-docente" className="grid gap-3 scroll-mt-24 md:grid-cols-3" onSubmit={onSubmit}>
       <Input label="Nombres" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
       <Input label="Apellidos" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
       <Input label="DNI" value={form.dni} onChange={(e) => setForm((p) => ({ ...p, dni: e.target.value }))} />
-      <Input label="Correo" type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required />
+      <Input label="Correo institucional" type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required />
       <Input
         label={editingId ? "Nueva contraseña (opcional)" : "Contraseña"}
         type="password"
@@ -94,10 +94,10 @@ export function TeacherForm({ form, setForm, grades, sections, editingId, onSubm
         </select>
       </label>
       <div className="flex items-end gap-2 md:col-span-2">
-        <Button type="submit" variant="primary">
-          {editingId ? "Actualizar docente" : "Nuevo docente"}
+        <Button type="submit" variant="primary" className="cursor-pointer">
+          {editingId ? "Actualizar docente" : "Registrar docente"}
         </Button>
-        <Button type="button" variant="secondary" onClick={onClear}>
+        <Button type="button" variant="secondary" className="cursor-pointer" onClick={onClear}>
           Limpiar
         </Button>
       </div>

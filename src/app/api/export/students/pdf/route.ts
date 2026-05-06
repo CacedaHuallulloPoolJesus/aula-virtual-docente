@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/api-auth";
 import { buildAcademicPdf } from "@/lib/pdf-export";
+import { getInstitutionalLogoDataUrlFromDisk } from "@/lib/pdf-server";
 
 export async function GET() {
   const auth = await requireSession();
@@ -39,11 +40,14 @@ export async function GET() {
   const statusLabel = (s: StudentStatus) =>
     s === StudentStatus.ACTIVE ? "Activo" : s === StudentStatus.TRANSFERRED ? "Traslado" : s === StudentStatus.WITHDRAWN ? "Retirado" : "Inactivo";
 
+  const logoDataUrl = getInstitutionalLogoDataUrlFromDisk();
+
   const doc = buildAcademicPdf({
     config,
     title: "Reporte de estudiantes",
     teacherName,
     gradeSection,
+    logoDataUrl,
     columns: [
       { header: "Código", dataKey: "code" },
       { header: "Apellidos y nombres", dataKey: "name" },

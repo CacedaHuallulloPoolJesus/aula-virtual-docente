@@ -3,9 +3,9 @@
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import type { SystemConfig } from "@prisma/client";
-import { Button, Card, Input } from "@/components/ui";
+import { Button, Card, Input, useToast } from "@/components/ui";
 import { apiJson } from "@/lib/api-client";
-import { buildAcademicPdf } from "@/lib/pdf-export";
+import { buildAcademicPdfWithLogo } from "@/lib/pdf-export";
 
 type GeneratedSession = {
   title: string;
@@ -27,6 +27,7 @@ type GeneratedSession = {
 };
 
 export function IaSessionForm() {
+  const { toast } = useToast();
   const { data: session } = useSession();
   const [result, setResult] = useState<GeneratedSession | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export function IaSessionForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!session?.user?.teacherId) {
-      alert("Solo usuarios con perfil docente pueden generar sesiones con IA.");
+      toast("Solo usuarios con perfil docente pueden generar sesiones con IA.", "warning");
       return;
     }
     setLoading(true);
@@ -54,7 +55,7 @@ export function IaSessionForm() {
         }),
       });
       if (!apiRes.ok) {
-        alert(await apiRes.text());
+        toast(await apiRes.text(), "error");
         setLoading(false);
         return;
       }
@@ -77,8 +78,9 @@ export function IaSessionForm() {
         instrument: "Lista de cotejo / rúbrica",
         duration: String(formData.duration ?? "90 minutos"),
       });
+      toast("Propuesta generada. Puede editarla y guardarla o exportarla a PDF.", "success");
     } catch {
-      alert("Error al generar sesión");
+      toast("Error al generar sesión.", "error");
     }
     setLoading(false);
   }
@@ -108,9 +110,9 @@ export function IaSessionForm() {
           generatedByIa: true,
         }),
       });
-      alert("Sesión IA guardada correctamente.");
+      toast("Sesión IA guardada correctamente.", "success");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Error al guardar");
+      toast(e instanceof Error ? e.message : "Error al guardar", "error");
     }
   }
 
@@ -118,10 +120,10 @@ export function IaSessionForm() {
     if (!result || !session?.user?.teacherId) return;
     try {
       const config = await apiJson<SystemConfig | null>("/api/system-config");
-      const doc = buildAcademicPdf({
+      const doc = await buildAcademicPdfWithLogo({
         config,
-        title: result.title,
-        subtitle: `${result.area} · ${result.grade} ${result.section}`,
+        title: "Sesión generada con IA",
+        subtitle: `${result.title} · ${result.area} · ${result.grade} ${result.section}`,
         teacherName: session.user.name ?? session.user.email ?? "",
         gradeSection: `${result.grade} — ${result.section}`,
         columns: [
@@ -138,8 +140,9 @@ export function IaSessionForm() {
         ],
       });
       doc.save("sesion-ia.pdf");
+      toast("PDF generado correctamente.", "success");
     } catch {
-      alert("No se pudo exportar PDF");
+      toast("No se pudo exportar PDF.", "error");
     }
   }
 
@@ -159,8 +162,8 @@ export function IaSessionForm() {
           <Input label="Competencia" name="competence" placeholder="Lee diversos tipos de textos" required />
           <Input label="Duración" name="duration" placeholder="90 minutos" defaultValue="90 minutos" required />
           <Input label="Propósito de aprendizaje" name="purpose" placeholder="Inferir información implícita" required />
-          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
-            {loading ? "Generando propuesta…" : "Generar sesión inteligente"}
+          <Button type="submit" variant="primary" className="w-full cursor-pointer" disabled={loading}>
+            {loading ? "Generando propuesta…" : "Generar sesión"}
           </Button>
         </form>
       </Card>
@@ -181,14 +184,24 @@ export function IaSessionForm() {
             <Input label="Evaluación" value={result.evaluation} onChange={(e) => updateField("evaluation", e.target.value)} />
             <Input label="Instrumento" value={result.instrument} onChange={(e) => updateField("instrument", e.target.value)} />
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button variant="secondary" onClick={() => void saveSession()}>
+              <Button type="button" variant="secondary" className="cursor-pointer" onClick={() => void saveSession()}>
                 Guardar sesión
               </Button>
-              <Button variant="secondary" onClick={() => void exportPdf()}>
+              <Button type="button" variant="secondary" className="cursor-pointer" onClick={() => void exportPdf()}>
                 Exportar PDF
               </Button>
-              <Button variant="secondary" onClick={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))}>
-                Copiar contenido
+              <Button
+                type="button"
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={() =>
+                  void navigator.clipboard.writeText(JSON.stringify(result, null, 2)).then(
+                    () => toast("Contenido copiado al portapapeles.", "success"),
+                    () => toast("No se pudo copiar al portapapeles.", "error"),
+                  )
+                }
+              >
+                Copiar
               </Button>
             </div>
           </div>

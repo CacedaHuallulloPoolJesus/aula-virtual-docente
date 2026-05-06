@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Role } from "@prisma/client";
-import { Button, Card, Input } from "@/components/ui";
+import { ForbiddenSection } from "@/components/layout/ForbiddenSection";
+import { Button, Card, Input, useToast } from "@/components/ui";
 import { apiJson } from "@/lib/api-client";
 
 type Config = {
@@ -24,6 +25,7 @@ type Config = {
 };
 
 export default function ConfiguracionPage() {
+  const { toast } = useToast();
   const { data: session } = useSession();
   const [cfg, setCfg] = useState<Config | null>(null);
   const [saving, setSaving] = useState(false);
@@ -35,12 +37,7 @@ export default function ConfiguracionPage() {
   }, []);
 
   if (session?.user?.role !== Role.ADMIN) {
-    return (
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-primary">Configuración Institucional</h2>
-        <Card className="text-foreground/85">Solo el administrador puede modificar la configuración del sistema.</Card>
-      </section>
-    );
+    return <ForbiddenSection />;
   }
 
   if (!cfg) {
@@ -58,9 +55,9 @@ export default function ConfiguracionPage() {
     try {
       const updated = await apiJson<Config>("/api/system-config", { method: "PUT", body: JSON.stringify(cfg) });
       setCfg(updated);
-      alert("Configuración guardada.");
+      toast("Configuración guardada correctamente.", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al guardar");
+      toast(err instanceof Error ? err.message : "Error al guardar", "error");
     } finally {
       setSaving(false);
     }
@@ -84,7 +81,7 @@ export default function ConfiguracionPage() {
           <Input label="Color secundario (hex)" value={cfg.secondaryColor ?? ""} onChange={(e) => setCfg({ ...cfg, secondaryColor: e.target.value || null })} />
           <Input label="Períodos (JSON opcional)" value={cfg.periodsJson ?? ""} onChange={(e) => setCfg({ ...cfg, periodsJson: e.target.value || null })} className="md:col-span-2" />
           <div className="md:col-span-2">
-            <Button type="submit" variant="primary" disabled={saving}>
+            <Button type="submit" variant="primary" className="cursor-pointer" disabled={saving}>
               {saving ? "Guardando..." : "Guardar configuración"}
             </Button>
           </div>

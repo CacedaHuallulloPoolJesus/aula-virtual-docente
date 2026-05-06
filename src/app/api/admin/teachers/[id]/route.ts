@@ -1,4 +1,4 @@
-import { Role, TeacherStatus } from "@prisma/client";
+import { Prisma, Role, TeacherStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -20,10 +20,18 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const fullName = body.fullName != null ? String(body.fullName).trim() : `${firstName} ${lastName}`.trim();
 
   if (body.email) {
-    await prisma.user.update({
-      where: { id: teacher.userId },
-      data: { email: String(body.email).toLowerCase().trim() },
-    });
+    const nextEmail = String(body.email).toLowerCase().trim();
+    try {
+      await prisma.user.update({
+        where: { id: teacher.userId },
+        data: { email: nextEmail },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        return NextResponse.json({ message: "Ya existe un usuario con ese correo institucional." }, { status: 409 });
+      }
+      throw e;
+    }
   }
 
   if (body.password) {
