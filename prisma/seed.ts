@@ -1,13 +1,8 @@
-import { Role, StudentStatus, TeacherStatus } from "@prisma/client";
+import { Role, StudentStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import { institutionDefaults } from "../src/constants/institution";
 
-/**
- * Campos alineados con `prisma/schema.prisma`:
- * Teacher: userId, firstName, lastName, fullName, dni?, status, assignedGradeId?, assignedSectionId?
- * Student: code, firstName, lastName, fullName, dni?, gradeId, sectionId, status
- */
 async function main() {
   const adminPassword = await bcrypt.hash("Admin123*", 10);
   const teacherPassword = await bcrypt.hash("123456", 10);
@@ -17,21 +12,30 @@ async function main() {
   await prisma.generatedSession.deleteMany();
   await prisma.learningSession.deleteMany();
   await prisma.course.deleteMany();
-  await prisma.report.deleteMany();
-  await prisma.agentLog.deleteMany();
   await prisma.student.deleteMany();
   await prisma.account.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.teacher.deleteMany();
   await prisma.user.deleteMany();
   await prisma.academicPeriod.deleteMany();
   await prisma.section.deleteMany();
   await prisma.grade.deleteMany();
 
-  const grade1 = await prisma.grade.create({ data: { name: "1ro Primaria" } });
-  const grade2 = await prisma.grade.create({ data: { name: "2do Primaria" } });
+  const grade1 = await prisma.grade.create({
+    data: { name: "1ro Primaria" },
+  });
 
-  const section1A = await prisma.section.create({ data: { name: "A", gradeId: grade1.id } });
-  const section2A = await prisma.section.create({ data: { name: "A", gradeId: grade2.id } });
+  const grade2 = await prisma.grade.create({
+    data: { name: "2do Primaria" },
+  });
+
+  const section1A = await prisma.section.create({
+    data: { name: "A", gradeId: grade1.id },
+  });
+
+  const section2A = await prisma.section.create({
+    data: { name: "A", gradeId: grade2.id },
+  });
 
   await prisma.user.create({
     data: {
@@ -56,7 +60,7 @@ async function main() {
       lastName: "Quispe Huamán",
       fullName: "Rosa Quispe Huamán",
       dni: "40123456",
-      status: TeacherStatus.ACTIVE,
+      status: "ACTIVE",
       assignedGradeId: grade1.id,
       assignedSectionId: section1A.id,
     },
@@ -77,7 +81,7 @@ async function main() {
       lastName: "Huanca Salazar",
       fullName: "Carlos Huanca Salazar",
       dni: "40234567",
-      status: TeacherStatus.ACTIVE,
+      status: "ACTIVE",
       assignedGradeId: grade2.id,
       assignedSectionId: section2A.id,
     },
@@ -131,6 +135,8 @@ async function main() {
       logoUrl: institutionDefaults.logoPath,
     },
   });
+
+  console.log("Seed ejecutado correctamente.");
 }
 
 main()
