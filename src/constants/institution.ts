@@ -1,4 +1,5 @@
 /** Valores institucionales por defecto (si no hay registro en SystemConfig). */
+/** Logo institucional: colocar el archivo en `public/insignia.png`. */
 export const institutionDefaults = {
   fullLegalName: "Institución Educativa Virgen del Carmen — Huayucachi",
   shortName: "I.E. Virgen del Carmen",
