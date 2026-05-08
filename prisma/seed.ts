@@ -1,4 +1,4 @@
-import { Role, StudentStatus } from "@prisma/client";
+import { Role, StudentStatus, TeacherStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
 import { institutionDefaults } from "../src/constants/institution";
@@ -60,7 +60,7 @@ async function main() {
       lastName: "Quispe Huamán",
       fullName: "Rosa Quispe Huamán",
       dni: "40123456",
-      status: "ACTIVE",
+      status: TeacherStatus.ACTIVE,
       assignedGradeId: grade1.id,
       assignedSectionId: section1A.id,
     },
@@ -81,7 +81,7 @@ async function main() {
       lastName: "Huanca Salazar",
       fullName: "Carlos Huanca Salazar",
       dni: "40234567",
-      status: "ACTIVE",
+      status: TeacherStatus.ACTIVE,
       assignedGradeId: grade2.id,
       assignedSectionId: section2A.id,
     },

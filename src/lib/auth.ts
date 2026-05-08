@@ -24,40 +24,18 @@ export const authOptions: AuthOptions = {
         const emailNorm = String(credentials.email).trim().toLowerCase();
         const password = String(credentials.password);
 
-        const legacyEmailByInstitutional: Record<string, string> = {
-          "admin@virgendelcarmen.edu.pe": "admin@aula.com",
-          "docente1@virgendelcarmen.edu.pe": "docente1@aula.com",
-          "docente2@virgendelcarmen.edu.pe": "docente2@aula.com",
-        };
-
-        let user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { email: emailNorm },
           include: { teacher: true },
         });
 
-        if (!user) {
-          const legacy = legacyEmailByInstitutional[emailNorm];
-          if (legacy) {
-            user = await prisma.user.findUnique({
-              where: { email: legacy },
-              include: { teacher: true },
-            });
-          }
-        }
-
         if (!user || !user.password) {
-          return null;
+          throw new Error("UserNotFound");
         }
 
         const validPassword = await bcrypt.compare(password, user.password);
-
-        const fallbackValid =
-          (emailNorm === "admin@virgendelcarmen.edu.pe" && password === "Admin123*") ||
-          (emailNorm === "admin@aula.com" && password === "123456") ||
-          (emailNorm.startsWith("docente") && password === "123456");
-
-        if (!validPassword && !fallbackValid) {
-          return null;
+        if (!validPassword) {
+          throw new Error("IncorrectPassword");
         }
 
         if (user.role === Role.TEACHER && user.teacher?.status === TeacherStatus.INACTIVE) {

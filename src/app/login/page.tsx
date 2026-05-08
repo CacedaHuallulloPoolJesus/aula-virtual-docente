@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [logoOk, setLogoOk] = useState(true);
   const router = useRouter();
   const { status } = useSession();
   const isDisabled = loading || !email.trim() || !password.trim();
@@ -44,6 +43,10 @@ export default function LoginPage() {
     if (res?.error) {
       if (res.error === "AccountInactive") {
         setError("Cuenta inactiva, comuníquese con el administrador.");
+      } else if (res.error === "UserNotFound") {
+        setError("Usuario no encontrado.");
+      } else if (res.error === "IncorrectPassword") {
+        setError("Contraseña incorrecta.");
       } else {
         setError("Credenciales incorrectas.");
       }
@@ -66,18 +69,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md rounded-3xl border border-accent/45 bg-white/98 p-8 shadow-2xl shadow-primary/25 backdrop-blur-md transition-all duration-300">
         <div className="mb-6 space-y-3 text-center">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border-2 border-accent/70 bg-cream shadow-md ring-2 ring-secondary/20">
-            {logoOk ? (
-              <Image
-                src={institutionDefaults.logoPath}
-                alt="Insignia institucional"
-                width={78}
-                height={78}
-                className="rounded-full object-cover"
-                onError={() => setLogoOk(false)}
-              />
-            ) : (
-              <span className="text-xl font-bold text-primary">VC</span>
-            )}
+            <Image src={institutionDefaults.logoPath} alt="Insignia institucional" width={78} height={78} className="rounded-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl">Aula Virtual Docente</h1>
           <p className="text-sm font-medium text-secondary">{institutionDefaults.fullLegalName}</p>
