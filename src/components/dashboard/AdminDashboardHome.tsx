@@ -23,16 +23,15 @@ export default function AdminDashboardHome() {
   return (
     <section className="space-y-8">
       <div className="flex flex-wrap items-start gap-6 rounded-2xl border border-secondary/15 bg-white p-6 shadow-sm">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-accent/60 bg-cream shadow-md">
+        <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[#F2B705] bg-white p-1 shadow-lg">
           <Image
-            src={institutionDefaults.logoPath}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="80px"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
+            src="/insignia.png"
+            alt="Insignia Institución Educativa Virgen del Carmen"
+            width={96}
+            height={96}
+            priority
+            unoptimized
+            className="h-full w-full object-contain"
           />
         </div>
         <div className="min-w-0 flex-1">
