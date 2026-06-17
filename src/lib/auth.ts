@@ -22,7 +22,7 @@ export const authOptions: AuthOptions = {
         }
 
         const emailNorm = String(credentials.email).trim().toLowerCase();
-        const password = String(credentials.password);
+        const password = String(credentials.password).trim();
 
         const user = await prisma.user.findUnique({
           where: { email: emailNorm },

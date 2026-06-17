@@ -4,6 +4,7 @@
 import { StudentStatus, TeacherStatus } from "@prisma/client";
 import type { AppData } from "@/types/app";
 import { areas, periods } from "@/constants/academic";
+import { demoCredentials } from "@/constants/demo-credentials";
 
 export type {
   Role,
@@ -23,9 +24,26 @@ export { areas, periods };
 
 export const initialMockData: AppData = {
   users: [
-    { id: "u-admin", email: "admin@aula.com", password: "123456", role: "ADMIN" },
-    { id: "u-doc1", email: "docente1@aula.com", password: "123456", role: "TEACHER", teacherId: "t-1" },
-    { id: "u-doc2", email: "docente2@aula.com", password: "123456", role: "TEACHER", teacherId: "t-2" },
+    {
+      id: "u-admin",
+      email: demoCredentials[0].email,
+      password: demoCredentials[0].password,
+      role: "ADMIN",
+    },
+    {
+      id: "u-doc1",
+      email: demoCredentials[1].email,
+      password: demoCredentials[1].password,
+      role: "TEACHER",
+      teacherId: "t-1",
+    },
+    {
+      id: "u-doc2",
+      email: demoCredentials[2].email,
+      password: demoCredentials[2].password,
+      role: "TEACHER",
+      teacherId: "t-2",
+    },
   ],
   teachers: [
     {
@@ -33,7 +51,7 @@ export const initialMockData: AppData = {
       code: "DOC-001",
       firstName: "Rosa",
       lastName: "Quispe Huamán",
-      email: "docente1@aula.com",
+      email: demoCredentials[1].email,
       grade: "1ro Primaria",
       section: "A",
       status: TeacherStatus.ACTIVE,
@@ -43,7 +61,7 @@ export const initialMockData: AppData = {
       code: "DOC-002",
       firstName: "Carlos",
       lastName: "Huanca Salazar",
-      email: "docente2@aula.com",
+      email: demoCredentials[2].email,
       grade: "2do Primaria",
       section: "B",
       status: TeacherStatus.ACTIVE,

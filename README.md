@@ -47,7 +47,6 @@ sistema-aula-virtual/
 | Docente 1 | `docente1@virgendelcarmen.edu.pe` | `123456` |
 | Docente 2 | `docente2@virgendelcarmen.edu.pe` | `123456` |
 
-
 Detalle en [docs/usuarios-demo.md](docs/usuarios-demo.md).
 
 ## Instalación y ejecución

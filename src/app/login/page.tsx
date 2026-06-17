@@ -39,7 +39,7 @@ export default function LoginPage() {
 
     const res = await signIn("credentials", {
       email: email.trim().toLowerCase(),
-      password,
+      password: password.trim(),
       redirect: false,
     });
 

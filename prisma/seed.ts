@@ -1,11 +1,13 @@
 import { Role, StudentStatus, TeacherStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
+import { demoCredentials } from "../src/constants/demo-credentials";
 import { institutionDefaults } from "../src/constants/institution";
 
 async function main() {
-  const adminPassword = await bcrypt.hash("Admin123*", 10);
-  const teacherPassword = await bcrypt.hash("123456", 10);
+  const [adminCred, teacher1Cred, teacher2Cred] = demoCredentials;
+  const adminPassword = await bcrypt.hash(adminCred.password, 10);
+  const teacherPassword = await bcrypt.hash(teacher1Cred.password, 10);
 
   await prisma.gradeRecord.deleteMany();
   await prisma.attendance.deleteMany();
@@ -39,7 +41,7 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      email: "admin@virgendelcarmen.edu.pe",
+      email: adminCred.email,
       password: adminPassword,
       role: Role.ADMIN,
     },
@@ -47,7 +49,7 @@ async function main() {
 
   const teacherUser1 = await prisma.user.create({
     data: {
-      email: "docente1@virgendelcarmen.edu.pe",
+      email: teacher1Cred.email,
       password: teacherPassword,
       role: Role.TEACHER,
     },
@@ -68,7 +70,7 @@ async function main() {
 
   const teacherUser2 = await prisma.user.create({
     data: {
-      email: "docente2@virgendelcarmen.edu.pe",
+      email: teacher2Cred.email,
       password: teacherPassword,
       role: Role.TEACHER,
     },
