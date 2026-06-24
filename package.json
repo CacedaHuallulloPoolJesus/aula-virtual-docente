@@ -9,8 +9,8 @@
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts",
-    "setup:demo": "set DATABASE_URL=file:./dev.db&& npx prisma generate && npx prisma migrate dev --name init && npx prisma db seed",
+    "prisma:seed": "prisma db seed",
+    "setup:demo": "cross-env DATABASE_URL=file:./dev.db npx prisma generate && npx prisma migrate dev --name init && npx prisma db seed",
     "demo": "npm run setup:demo && npm run dev"
   },
   "dependencies": {
@@ -37,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
@@ -45,7 +46,6 @@
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
-  }
-
-  
+  },
+  "postinstall": "prisma generate"    
 }
