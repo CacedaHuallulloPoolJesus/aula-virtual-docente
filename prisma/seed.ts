@@ -6,8 +6,10 @@ import { institutionDefaults } from "../src/constants/institution";
 
 async function main() {
   const [adminCred, teacher1Cred, teacher2Cred] = demoCredentials;
+
   const adminPassword = await bcrypt.hash(adminCred.password, 10);
-  const teacherPassword = await bcrypt.hash(teacher1Cred.password, 10);
+  const teacher1Password = await bcrypt.hash(teacher1Cred.password, 10);
+  const teacher2Password = await bcrypt.hash(teacher2Cred.password, 10);
 
   await prisma.gradeRecord.deleteMany();
   await prisma.attendance.deleteMany();
@@ -50,7 +52,7 @@ async function main() {
   const teacherUser1 = await prisma.user.create({
     data: {
       email: teacher1Cred.email,
-      password: teacherPassword,
+      password: teacher1Password,
       role: Role.TEACHER,
     },
   });
@@ -71,7 +73,7 @@ async function main() {
   const teacherUser2 = await prisma.user.create({
     data: {
       email: teacher2Cred.email,
-      password: teacherPassword,
+      password: teacher2Password,
       role: Role.TEACHER,
     },
   });
