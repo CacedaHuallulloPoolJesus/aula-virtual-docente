@@ -1,109 +1,14 @@
-# Mockups del Sistema
+# Mockups e implementación
 
-## Pantalla Login
-
-![Login](img/login.png)
-
-Descripción
-
-Permite el acceso seguro al sistema.
-
----
-
-## Dashboard
-
-![Dashboard](img/dashboard.png)
-
-Descripción
-
-Presenta indicadores generales.
-
----
-
-## Docentes
-
-![Docentes](img/docentes.png)
-
-Descripción
-
-Permite administrar docentes.
-
----
-
-## Estudiantes
-
-![Estudiantes](img/estudiantes.png)
-
-Descripción
-
-Permite administrar estudiantes.
-
----
-
-## Grados y Secciones
-
-![Grados](img/grados.png)
-
-Descripción
-
-Administra grados y secciones.
-
----
-
-## Asistencia
-
-![Asistencia](img/asistencia.png)
-
-Descripción
-
-Registro de asistencia.
-
----
-
-## Notas
-
-![Notas](img/notas.png)
-
-Descripción
-
-Registro de calificaciones.
-
----
-
-## Sesiones
-
-![Sesiones](img/sesiones.png)
-
-Descripción
-
-Gestión de sesiones.
-
----
-
-## IA Sesiones
-
-![IA](img/ia-sesiones.png)
-
-Descripción
-
-Generación automática mediante IA.
-
----
-
-## Reportes
-
-![Reportes](img/reportes.png)
-
-Descripción
-
-Generación de reportes.
-
----
-
-## Configuración
-
-![Configuración](img/configuracion.png)
-
-Descripción
-
-Configuración general.
+| Mockup | Ruta del código |
+|--------|-----------------|
+| Login | src/app/login/page.tsx |
+| Dashboard | src/app/(main)/dashboard |
+| Docentes | src/app/(main)/docentes |
+| Estudiantes | src/app/(main)/estudiantes |
+| Asistencia | src/app/(main)/asistencia |
+| Notas | src/app/(main)/notas |
+| Sesiones | src/app/(main)/sesiones |
+| IA Sesiones | src/app/(main)/ia-sesiones |
+| Reportes | src/app/(main)/reportes |
+| Configuración | src/app/(main)/configuracion |
