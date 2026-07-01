@@ -1,0 +1,7 @@
+| Problema              | Solución                             |
+| --------------------- | ------------------------------------ |
+| No inicia sesión      | Verificar correo y contraseña        |
+| No carga Dashboard    | Verificar conexión                   |
+| No guarda estudiantes | Revisar conexión BD                  |
+| Error IA              | Verificar configuración del servicio |
+| No genera PDF         | Revisar permisos                     |
